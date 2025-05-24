@@ -30,6 +30,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.legalapor.home.beranda.BerandaScreen
 import com.example.legalapor.home.ui.theme.LegaLaporTheme
 
 class HomeActivity : ComponentActivity() {
@@ -76,12 +78,21 @@ fun MainScreen() {
 
     Scaffold (
         topBar = {
-
+            TopAppBar(
+                title = {
+                    Text("LegaLapor")
+                }
+            )
         },
         content = {
-            Box(modifier = Modifier.padding(it).fillMaxSize(),
-//            contentAlignment = Alignment.Center
-            )
+            Box(modifier = Modifier.padding(it).fillMaxSize(),) {
+                when (selectedItemIndex) {
+                    0 -> BerandaScreen()
+//                    1 -> ForumScreen()
+//                    2 -> RiwayatScreen()
+//                    3 -> SettingsScreen()
+                }
+            }
         },
         bottomBar = {
             BottomAppBar(
@@ -152,7 +163,7 @@ fun BottomNavBar(modifier: Modifier = Modifier,
 @Preview(showBackground = true)
 @Composable
 fun SimpleComposablePreview() {
-    com.example.legalapor.home.MainScreen()
+    MainScreen()
 }
 
 
