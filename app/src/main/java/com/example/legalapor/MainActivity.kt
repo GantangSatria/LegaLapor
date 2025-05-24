@@ -66,6 +66,14 @@ fun MainScreen() {
     )
 
     Scaffold (
+        topBar = {
+
+        },
+        content = {
+            Box(modifier = Modifier.padding(it).fillMaxSize(),
+//            contentAlignment = Alignment.Center
+            )
+        },
         bottomBar = {
             BottomAppBar(
                 modifier = Modifier.height(120.dp),
@@ -87,12 +95,12 @@ fun MainScreen() {
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
-    ) {
-        innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize(),
-//            contentAlignment = Alignment.Center
-        )
-    }
+    )
+//        innerPadding ->
+//        Box(modifier = Modifier.padding(innerPadding).fillMaxSize(),
+////            contentAlignment = Alignment.Center
+//        )
+//    }
 }
 
 @Composable
