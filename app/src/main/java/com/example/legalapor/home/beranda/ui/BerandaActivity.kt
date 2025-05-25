@@ -1,4 +1,4 @@
-package com.example.legalapor.home.beranda
+package com.example.legalapor.home.beranda.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -126,5 +126,5 @@ fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    BerandaScreen()
+    BerandaScreen(viewModel = BerandaViewModel())
 }
