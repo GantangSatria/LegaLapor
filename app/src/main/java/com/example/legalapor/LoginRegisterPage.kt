@@ -38,8 +38,10 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.legalapor.models.UserModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 
 
@@ -125,7 +127,7 @@ fun AuthScreen() {
                     onStateChange = { authState = it },
                     onSignup = { email, password, fullName, phoneNumber ->
                         authState = authState.copy(isLoading = true)
-                        signUpWithEmail(auth, email, password, context) { success ->
+                        signUpWithEmail(auth, email, password, fullName, phoneNumber, context) { success ->
                             authState = authState.copy(isLoading = false)
                             if (success) {
                                 Toast.makeText(context, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
@@ -768,13 +770,34 @@ fun signUpWithEmail(
     auth: FirebaseAuth,
     email: String,
     password: String,
+    name: String,
+    phoneNumber: String,
     context: android.content.Context,
     onComplete: (Boolean) -> Unit
 ) {
+    val db = FirebaseFirestore.getInstance()
+
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                onComplete(true)
+                val uid = task.result?.user?.uid ?: return@addOnCompleteListener
+
+                val user = UserModel(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    phoneNumber = phoneNumber
+                )
+
+                db.collection("users").document(uid)
+                    .set(user)
+                    .addOnSuccessListener {
+                        onComplete(true)
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(context, "Gagal simpan data user: ${e.message}", Toast.LENGTH_LONG).show()
+                        onComplete(false)
+                    }
             } else {
                 Toast.makeText(context, "Registrasi gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 onComplete(false)
