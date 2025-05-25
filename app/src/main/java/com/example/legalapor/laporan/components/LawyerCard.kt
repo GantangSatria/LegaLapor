@@ -42,8 +42,8 @@ fun SelectableLawyerCard(lawyer: LawyerModel, onClick: () -> Unit) {
         onClick = onClick
     ) {
         Row(
-            modifier = Modifier.padding(12.dp), // Slightly reduced padding for a denser look
-            verticalAlignment = Alignment.Top // Align items to the top of the row
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.Top
         ) {
             AsyncImage(
                 model = lawyer.imageUrl,
