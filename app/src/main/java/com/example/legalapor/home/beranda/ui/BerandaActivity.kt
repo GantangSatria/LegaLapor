@@ -5,14 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,10 +17,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +33,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.legalapor.R
+import com.example.legalapor.home.beranda.ui.components.LawyerProfileCard
 import com.example.legalapor.home.beranda.ui.theme.LegaLaporTheme
 import com.example.legalapor.models.LawyerModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.legalapor.service.viewmodel.BerandaViewModel
+
+
 
 class BerandaActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,13 +53,14 @@ class BerandaActivity : ComponentActivity() {
     }
 }
 
-val chipItems = listOf("Pidana", "Perdata", "Perpajakan", "Kepailitan", "Perkawinan dan Perceraian", "Pertanahan", "Tenaga Kerja", "Hak Cipta")
-var lawyerItems = listOf(LawyerModel(1, "Farida Choirunnisa, S.H.", "", "Pengalaman 3 Tahun", "220 Kasus", "PBH Peradi", 4.5f, 38, R.drawable.ic_launcher_foreground),
-    LawyerModel(2, "Zayn Maliki Al-Hasc, S.H., M.H.", "", "Pengalaman 6 Tahun", "110 Kasus", "YLBHI", 4.8f, 52, R.drawable.ic_launcher_foreground),
-    LawyerModel(3, "Aisha Putri, S.H.", "", "Pengalaman 5 Tahun", "180 Kasus", "LBH Jakarta", 4.6f, 45, R.drawable.ic_launcher_background));
+val chipItems = listOf("Pidana", "Perdata", "Perpajakan", "Kepailitan", "Perkawinan dan Perceraian", "Pertanahan", "Tenaga Kerja", "Hak Cipta");
+var lawyerItems = listOf(LawyerModel(1, "Farida Choirunnisa, S.H.", "", "Pengalaman 3 Tahun", "220 Kasus", "PBH Peradi", 4.5f, 38, "https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/public/lawyer-image//StockCake-Lawyer%20holding%20book_1725547095%201.png"),
+    LawyerModel(2, "Zayn Maliki Al-Hasc, S.H., M.H.", "", "Pengalaman 6 Tahun", "110 Kasus", "YLBHI", 4.8f, 52, ""),
+    LawyerModel(3, "Aisha Putri, S.H.", "", "Pengalaman 5 Tahun", "180 Kasus", "LBH Jakarta", 4.6f, 45, ""));
 
 @Composable
-fun BerandaScreen() {
+fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
+    val lawyers by viewModel.lawyers.collectAsState()
     var activeChipLabel by remember { mutableStateOf("Pidana") }
     Scaffold {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(it)) {
@@ -104,7 +105,7 @@ fun BerandaScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(lawyerItems) { lawyer ->
+                items(lawyers) { lawyer ->
                     LawyerProfileCard(
                         lawyer = lawyer
                     )

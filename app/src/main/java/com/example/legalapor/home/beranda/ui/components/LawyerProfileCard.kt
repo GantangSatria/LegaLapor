@@ -1,7 +1,6 @@
-package com.example.legalapor.home.beranda
+package com.example.legalapor.home.beranda.ui.components
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
@@ -20,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.legalapor.R
 import com.example.legalapor.models.LawyerModel
+import coil.compose.AsyncImage
 
 class LawyerProfileCard {
 }
@@ -36,14 +36,15 @@ fun LawyerProfileCard(lawyer: LawyerModel) {
             modifier = Modifier.padding(16.dp).height(intrinsicSize = IntrinsicSize.Min),
         ) {
             Row {
-                Image(
-                    painter = painterResource(id = lawyer.imageRes),
+                AsyncImage(
+                    model = lawyer.imageUrl,
                     contentDescription = "Profile picture of ${lawyer.name}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(width = 88.dp, height = 73.dp)
                         .clip(RoundedCornerShape(8.dp))
                 )
+                Spacer(Modifier.width(8.dp))
                 Column (
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ){
@@ -133,7 +134,7 @@ fun LawyerProfileCardPreviewStandalone() { // Renamed preview to avoid conflict
         organization = "PBH Peradi",
         rating = 4.5f,
         reviewCount = 38,
-        imageRes = R.drawable.ic_launcher_foreground
+        imageUrl = "https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/public/lawyer-image//StockCake-Lawyer%20holding%20book_1725547095%201.png"
     )
     MaterialTheme {
         LawyerProfileCard(lawyer = sampleLawyer)
