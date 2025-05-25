@@ -18,6 +18,11 @@
             android:label="@string/title_activity_lainnya"
             android:theme="@style/Theme.LegaLapor" />
         <activity
+            android:name=".home.beranda.BerandaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_beranda"
+            android:theme="@style/Theme.LegaLapor" />
+        <activity
             android:name=".home.HomeActivity"
             android:exported="false"
             android:label="@string/title_activity_home"
