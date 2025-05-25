@@ -1,7 +1,6 @@
-package com.example.legalapor.home.beranda
+package com.example.legalapor.home.beranda.ui.components
 
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
