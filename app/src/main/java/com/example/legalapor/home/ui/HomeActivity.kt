@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -31,6 +34,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,9 +42,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.legalapor.R
 import com.example.legalapor.home.beranda.ui.BerandaScreen
 import com.example.legalapor.home.ui.components.CustomTopAppBar
 import com.example.legalapor.home.ui.theme.LegaLaporTheme
@@ -105,10 +112,11 @@ fun MainScreen() {
             }
         },
         floatingActionButton = @Composable {
-            FloatingActionButton(modifier = Modifier.offset(y = 70.dp),
+            FloatingActionButton(modifier = Modifier.offset(y = 70.dp).size(57.dp),
+                containerColor = Color(0xFF31469F),
                 shape = CircleShape,
                 onClick = { /* TODO */ }) {
-                Icon(Icons.Filled.Add, contentDescription = "Add")
+                Image(painter = painterResource(id = R.drawable.lapor_button_image), modifier = Modifier.size(20.dp), contentDescription = null)
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
