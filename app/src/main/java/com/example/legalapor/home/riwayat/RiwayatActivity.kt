@@ -13,35 +13,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.legalapor.home.riwayat.ui.theme.LegaLaporTheme
 
-class RiwayatActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            LegaLaporTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
-    }
-}
+//class RiwayatActivity : ComponentActivity() {
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        enableEdgeToEdge()
+//        setContent {
+//            LegaLaporTheme {
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun RiwayatScreen() {
+    Text(text = "Riwayat")
+
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview2() {
     LegaLaporTheme {
-        Greeting("Android")
+        RiwayatScreen()
     }
 }

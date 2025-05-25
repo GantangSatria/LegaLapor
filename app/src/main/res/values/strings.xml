@@ -3,4 +3,6 @@
     <string name="title_activity_home">HomeActivity</string>
     <string name="title_activity_lainnya">LainnyaActivity</string>
     <string name="title_activity_beranda">BerandaActivity</string>
+    <string name="title_activity_lawyer_select_screen">LawyerSelectScreen</string>
+    <string name="title_activity_riwayat">RiwayatActivity</string>
 </resources>
