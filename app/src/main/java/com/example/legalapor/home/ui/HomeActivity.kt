@@ -1,4 +1,4 @@
-package com.example.legalapor.home
+package com.example.legalapor.home.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -41,7 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.legalapor.home.beranda.BerandaScreen
+import com.example.legalapor.home.beranda.ui.BerandaScreen
+import com.example.legalapor.home.ui.components.CustomTopAppBar
 import com.example.legalapor.home.ui.theme.LegaLaporTheme
 
 class HomeActivity : ComponentActivity() {
@@ -78,11 +79,7 @@ fun MainScreen() {
 
     Scaffold (
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("LegaLapor")
-                }
-            )
+            CustomTopAppBar(userName = "Febro")
         },
         content = {
             Box(modifier = Modifier.padding(it).fillMaxSize(),) {
@@ -155,6 +152,8 @@ fun BottomNavBar(modifier: Modifier = Modifier,
                         )
                     }
                 }
+
+                else -> {}
             }
         }
     }
