@@ -34,6 +34,11 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        compose = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -44,7 +49,31 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.auth.ktx)
+    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
 
+    // Choose one of the following:
+    // Material Design 3
+    implementation(libs.androidx.material3)
+    // or Material Design 2
+    implementation(libs.androidx.material)
+    // or skip Material Design and build directly on top of foundational components
+    implementation(libs.androidx.foundation)
+    // or only import the main APIs for the underlying toolkit systems,
+    // such as input and measurement/layout
+    implementation(libs.androidx.ui)
+
+    // Android Studio Preview support
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material.icons.core) // Or the latest version
+    implementation(libs.androidx.material.icons.extended) // For more icons, including Visibility/VisibilityOff
+    debugImplementation(libs.androidx.ui.tooling)
+
+    // UI Tests
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -53,6 +82,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.firebase.firestore.ktx)
 //    implementation(libs.androidx.navigation.compose.jvmstubs)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -60,18 +90,15 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
     implementation("com.google.firebase:firebase-analytics")
 
-    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
+//    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
+//    implementation(composeBom)
+//    androidTestImplementation(composeBom)
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-
-    // Navigation Compose - gunakan versi yang lebih stabil
-    implementation("androidx.navigation:navigation-compose:2.5.0-alpha02")
 
     // Splash API
     implementation("androidx.core:core-splashscreen:1.0.1")
@@ -90,4 +117,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     implementation ("com.google.accompanist:accompanist-pager:0.25.1")
+    
+    implementation("androidx.navigation:navigation-compose:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
