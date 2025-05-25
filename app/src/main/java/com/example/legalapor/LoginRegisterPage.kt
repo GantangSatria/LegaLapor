@@ -1,7 +1,9 @@
 package com.example.legalapor
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-
 import androidx.compose.material.*
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material.icons.Icons
@@ -22,8 +23,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -37,28 +38,45 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
-class LoginRegisterPage : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
-    }
-}
+
+// Data class untuk menyimpan state form
+data class AuthFormState(
+    val email: String = "",
+    val password: String = "",
+    val confirmPassword: String = "",
+    val fullName: String = "",
+    val phoneNumber: String = "",
+    val isLoading: Boolean = false,
+    val emailError: String? = null,
+    val passwordError: String? = null,
+    val confirmPasswordError: String? = null,
+    val fullNameError: String? = null,
+    val phoneNumberError: String? = null
+)
 
 @Composable
-fun LoginScreenContent() {
-    val primaryPurpleColor = Color(0xff31469f) // Main interactive elements purple
-    val logoBrandBlue = Color(0xFF3D5AFE)     // Blue part of the logo graphic
-    val logoBrandTeal = Color(0xFF00BFA5)     // Teal part of the logo graphic
-    val logoBrandTextBlue = Color(0xFF4FC3F7) // "LEGALAPOR" text under logo graphic
-
+fun AuthScreen() {
+    val primaryPurpleColor = Color(0xff31469f)
+    val logoBrandBlue = Color(0xFF3D5AFE)
+    val logoBrandTeal = Color(0xFF00BFA5)
+    val logoBrandTextBlue = Color(0xFF4FC3F7)
     val lightGrayBackground = Color(0xFFF5F5F5)
     val footerColor = primaryPurpleColor
+
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    var authState by remember { mutableStateOf(AuthFormState()) }
+    val context = LocalContext.current
+    val auth = Firebase.auth
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(lightGrayBackground) // This background is for the content inside the rounded box
+            .background(lightGrayBackground)
     ) {
         Column(
             modifier = Modifier
@@ -72,24 +90,170 @@ fun LoginScreenContent() {
             Spacer(modifier = Modifier.height(14.dp))
             WelcomeMessage(primaryPurpleColor)
             Spacer(modifier = Modifier.height(24.dp))
-            LoginRegisterTabs(primaryPurpleColor)
+
+            // Tab untuk Login/Signup
+            LoginRegisterTabs(
+                primaryPurpleColor,
+                selectedTabIndex
+            ) { index -> selectedTabIndex = index }
+
             Spacer(modifier = Modifier.height(24.dp))
-            EmailInput(primaryPurpleColor)
-            Spacer(modifier = Modifier.height(16.dp))
-            PasswordInput(primaryPurpleColor)
-            Spacer(modifier = Modifier.height(10.dp))
-            ForgotPasswordLink(primaryPurpleColor)
-            Spacer(modifier = Modifier.height(24.dp))
-            SignInButton(primaryPurpleColor)
+
+            // Form berdasarkan tab yang dipilih
+            if (selectedTabIndex == 0) {
+                // Login Form
+                LoginForm(
+                    authState = authState,
+                    primaryColor = primaryPurpleColor,
+                    onStateChange = { authState = it },
+                    onLogin = { email, password ->
+                        authState = authState.copy(isLoading = true)
+                        signInWithEmail(auth, email, password, context) { success ->
+                            authState = authState.copy(isLoading = false)
+                            if (success) {
+                                Toast.makeText(context, "Login berhasil!", Toast.LENGTH_SHORT).show()
+                                // Navigate to main screen
+                            }
+                        }
+                    }
+                )
+            } else {
+                // Signup Form
+                SignupForm(
+                    authState = authState,
+                    primaryColor = primaryPurpleColor,
+                    onStateChange = { authState = it },
+                    onSignup = { email, password, fullName, phoneNumber ->
+                        authState = authState.copy(isLoading = true)
+                        signUpWithEmail(auth, email, password, context) { success ->
+                            authState = authState.copy(isLoading = false)
+                            if (success) {
+                                Toast.makeText(context, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
+                                // Save additional user data (fullName, phoneNumber) to Firestore
+                                // Navigate to main screen
+                            }
+                        }
+                    }
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
             OrContinueDivider()
             Spacer(modifier = Modifier.height(20.dp))
-            SocialLoginOptions()
+            SocialLoginOptions(auth, context)
             Spacer(modifier = Modifier.height(15.dp))
             TermsAndPolicyText()
-            Spacer(modifier = Modifier.height(24.dp)) // Ensures content is pushed up from footer
+            Spacer(modifier = Modifier.height(24.dp))
         }
         Footer(footerColor)
+    }
+}
+
+@Composable
+fun LoginForm(
+    authState: AuthFormState,
+    primaryColor: Color,
+    onStateChange: (AuthFormState) -> Unit,
+    onLogin: (String, String) -> Unit
+) {
+    Column {
+        EmailInput(
+            value = authState.email,
+            onValueChange = { onStateChange(authState.copy(email = it, emailError = null)) },
+            focusColor = primaryColor,
+            error = authState.emailError
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PasswordInput(
+            value = authState.password,
+            onValueChange = { onStateChange(authState.copy(password = it, passwordError = null)) },
+            focusColor = primaryColor,
+            label = "Kata Sandi",
+            error = authState.passwordError
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+        ForgotPasswordLink(primaryColor)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        SignInButton(
+            buttonColor = primaryColor,
+            isLoading = authState.isLoading,
+            onClick = {
+                if (validateLoginForm(authState, onStateChange)) {
+                    onLogin(authState.email, authState.password)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun SignupForm(
+    authState: AuthFormState,
+    primaryColor: Color,
+    onStateChange: (AuthFormState) -> Unit,
+    onSignup: (String, String, String, String) -> Unit
+) {
+    Column {
+        FullNameInput(
+            value = authState.fullName,
+            onValueChange = { onStateChange(authState.copy(fullName = it, fullNameError = null)) },
+            focusColor = primaryColor,
+            error = authState.fullNameError
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PhoneNumberInput(
+            value = authState.phoneNumber,
+            onValueChange = { onStateChange(authState.copy(phoneNumber = it, phoneNumberError = null)) },
+            focusColor = primaryColor,
+            error = authState.phoneNumberError
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        EmailInput(
+            value = authState.email,
+            onValueChange = { onStateChange(authState.copy(email = it, emailError = null)) },
+            focusColor = primaryColor,
+            error = authState.emailError
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PasswordInput(
+            value = authState.password,
+            onValueChange = { onStateChange(authState.copy(password = it, passwordError = null)) },
+            focusColor = primaryColor,
+            label = "Kata Sandi",
+            error = authState.passwordError
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PasswordInput(
+            value = authState.confirmPassword,
+            onValueChange = { onStateChange(authState.copy(confirmPassword = it, confirmPasswordError = null)) },
+            focusColor = primaryColor,
+            label = "Konfirmasi Kata Sandi",
+            error = authState.confirmPasswordError
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        SignUpButton(
+            buttonColor = primaryColor,
+            isLoading = authState.isLoading,
+            onClick = {
+                if (validateSignupForm(authState, onStateChange)) {
+                    onSignup(authState.email, authState.password, authState.fullName, authState.phoneNumber)
+                }
+            }
+        )
     }
 }
 
@@ -131,8 +295,11 @@ fun WelcomeMessage(highlightColor: Color) {
 }
 
 @Composable
-fun LoginRegisterTabs(selectedColor: Color) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+fun LoginRegisterTabs(
+    selectedColor: Color,
+    selectedTabIndex: Int,
+    onTabSelected: (Int) -> Unit
+) {
     val tabs = listOf("Masuk", "Daftar Akun")
 
     Column {
@@ -144,15 +311,15 @@ fun LoginRegisterTabs(selectedColor: Color) {
                 TabRowDefaults.Indicator(
                     Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                     color = selectedColor,
-                    height = 2.5.dp // Slightly thicker indicator
+                    height = 2.5.dp
                 )
             },
-            divider = {} // Remove default TabRow divider
+            divider = {}
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
+                    onClick = { onTabSelected(index) },
                     text = {
                         Text(
                             title,
@@ -164,63 +331,174 @@ fun LoginRegisterTabs(selectedColor: Color) {
                 )
             }
         }
-        Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp) // Full width divider
+        Divider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
     }
 }
 
 @Composable
-fun EmailInput(focusColor: Color) {
-    var email by remember { mutableStateOf("") }
-    OutlinedTextField(
-        value = email,
-        onValueChange = { email = it },
-        label = { Text("Email") },
-        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon", tint = Color.Gray) },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = focusColor,
-            unfocusedBorderColor = Color.LightGray,
-            cursorColor = focusColor,
-            focusedLabelColor = focusColor,
-            unfocusedLabelColor = Color.Gray
-        ),
-        shape = RoundedCornerShape(8.dp)
-    )
+fun EmailInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    focusColor: Color,
+    error: String? = null
+) {
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text("Email") },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon", tint = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = error != null,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = focusColor,
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = focusColor,
+                focusedLabelColor = focusColor,
+                unfocusedLabelColor = Color.Gray,
+                errorBorderColor = Color.Red,
+                errorLabelColor = Color.Red
+            ),
+            shape = RoundedCornerShape(8.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
+        error?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+    }
 }
 
 @Composable
-fun PasswordInput(focusColor: Color) {
-    var password by remember { mutableStateOf("") }
+fun PasswordInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    focusColor: Color,
+    label: String,
+    error: String? = null
+) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    OutlinedTextField(
-        value = password,
-        onValueChange = { password = it },
-        label = { Text("Kata Sandi") },
-        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon", tint = Color.Gray) },
-        trailingIcon = {
-            val image = if (passwordVisible) Icons.Filled.Visibility else {
-                Icons.Filled.VisibilityOff
-            }
-            val description = if (passwordVisible) "Hide password" else "Show password"
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                Icon(imageVector = image, contentDescription = description, tint = Color.Gray)
-            }
-        },
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = focusColor,
-            unfocusedBorderColor = Color.LightGray,
-            cursorColor = focusColor,
-            focusedLabelColor = focusColor,
-            unfocusedLabelColor = Color.Gray
-        ),
-        shape = RoundedCornerShape(8.dp)
-    )
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon", tint = Color.Gray) },
+            trailingIcon = {
+                val image = if (passwordVisible) Icons.Filled.RemoveRedEye else Icons.Filled.Close
+                val description = if (passwordVisible) "Hide password" else "Show password"
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description, tint = Color.Gray)
+                }
+            },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = error != null,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = focusColor,
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = focusColor,
+                focusedLabelColor = focusColor,
+                unfocusedLabelColor = Color.Gray,
+                errorBorderColor = Color.Red,
+                errorLabelColor = Color.Red
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+        error?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun FullNameInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    focusColor: Color,
+    error: String? = null
+) {
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text("Nama Lengkap") },
+            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = "Name Icon", tint = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = error != null,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = focusColor,
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = focusColor,
+                focusedLabelColor = focusColor,
+                unfocusedLabelColor = Color.Gray,
+                errorBorderColor = Color.Red,
+                errorLabelColor = Color.Red
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+        error?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun PhoneNumberInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    focusColor: Color,
+    error: String? = null
+) {
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text("Nomor Telepon") },
+            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = "Phone Icon", tint = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            isError = error != null,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = focusColor,
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = focusColor,
+                focusedLabelColor = focusColor,
+                unfocusedLabelColor = Color.Gray,
+                errorBorderColor = Color.Red,
+                errorLabelColor = Color.Red
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+        error?.let {
+            Text(
+                text = it,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -232,22 +510,60 @@ fun ForgotPasswordLink(linkColor: Color) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { /* Handle forgot password */ }
-            .padding(vertical = 4.dp), // Add padding for easier click
+            .padding(vertical = 4.dp),
         textAlign = TextAlign.Start
     )
 }
 
 @Composable
-fun SignInButton(buttonColor: Color) {
+fun SignInButton(
+    buttonColor: Color,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
     Button(
-        onClick = { /* Handle login */ },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
         colors = ButtonDefaults.buttonColors(backgroundColor = buttonColor),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
+        enabled = !isLoading
     ) {
-        Text("Masuk", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        } else {
+            Text("Masuk", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun SignUpButton(
+    buttonColor: Color,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        colors = ButtonDefaults.buttonColors(backgroundColor = buttonColor),
+        shape = RoundedCornerShape(8.dp),
+        enabled = !isLoading
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        } else {
+            Text("Daftar", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -259,7 +575,7 @@ fun OrContinueDivider() {
     ) {
         Divider(modifier = Modifier.weight(1f), color = Color.LightGray)
         Text(
-            text = "atau lanjutkan dengan email", // As per image
+            text = "atau lanjutkan dengan",
             fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(horizontal = 12.dp)
@@ -269,7 +585,7 @@ fun OrContinueDivider() {
 }
 
 @Composable
-fun SocialLoginOptions() {
+fun SocialLoginOptions(auth: FirebaseAuth, context: android.content.Context) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -281,12 +597,13 @@ fun SocialLoginOptions() {
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color.White) // Google button often has white background
+                .background(Color.White)
                 .border(BorderStroke(1.dp, Color.LightGray), CircleShape)
-                .clickable { /* Google login */ }
+                .clickable {
+                    // Handle Google login
+                    Toast.makeText(context, "Google login akan diimplementasikan", Toast.LENGTH_SHORT).show()
+                }
         ) {
-            // In a real app: Image(painter = painterResource(id = R.drawable.ic_google_logo), ...)
-            // Using a simple text "G" as placeholder.
             Image(
                 painter = painterResource(R.drawable.google_logo_graphic),
                 contentDescription = null,
@@ -296,20 +613,23 @@ fun SocialLoginOptions() {
 
         Spacer(modifier = Modifier.width(32.dp))
 
-        // Apple Button - Fixed to use Material Icons instead of non-existent resource
+        // Apple Button
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(Color.White)
-                .clickable { /* Apple login */ }
+                .clickable {
+                    // Handle Apple login
+                    Toast.makeText(context, "Apple login akan diimplementasikan", Toast.LENGTH_SHORT).show()
+                }
         ) {
-            // Using a simple "A" as placeholder since we don't have Apple logo resource
             Image(
                 painter = painterResource(R.drawable.apple_logo_graphic),
                 contentDescription = null,
-                modifier = Modifier.size(60.dp))
+                modifier = Modifier.size(60.dp)
+            )
         }
     }
 }
@@ -330,8 +650,7 @@ fun TermsAndPolicyText() {
         fontSize = 12.sp,
         color = Color.Gray,
         textAlign = TextAlign.Center,
-        modifier = Modifier
-            .padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
         lineHeight = 16.sp
     )
 }
@@ -342,33 +661,142 @@ fun Footer(backgroundColor: Color) {
         modifier = Modifier
             .fillMaxWidth()
             .background(backgroundColor)
-            .padding(vertical = 16.dp), // Slightly more padding
+            .padding(vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "© All Rights Reserved", // Fixed typo from "Right" to "Rights"
-            color = Color.White.copy(alpha = 0.9f), // Slightly transparent white
+            text = "© All Rights Reserved",
+            color = Color.White.copy(alpha = 0.9f),
             fontSize = 12.sp
         )
     }
 }
 
+// Fungsi validasi
+fun validateLoginForm(state: AuthFormState, onStateChange: (AuthFormState) -> Unit): Boolean {
+    var isValid = true
+    var newState = state
+
+    if (state.email.isBlank()) {
+        newState = newState.copy(emailError = "Email tidak boleh kosong")
+        isValid = false
+    } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
+        newState = newState.copy(emailError = "Format email tidak valid")
+        isValid = false
+    }
+
+    if (state.password.isBlank()) {
+        newState = newState.copy(passwordError = "Kata sandi tidak boleh kosong")
+        isValid = false
+    } else if (state.password.length < 8) {
+        newState = newState.copy(passwordError = "Kata sandi minimal 6 karakter")
+        isValid = false
+    }
+
+    onStateChange(newState)
+    return isValid
+}
+
+fun validateSignupForm(state: AuthFormState, onStateChange: (AuthFormState) -> Unit): Boolean {
+    var isValid = true
+    var newState = state
+
+    if (state.fullName.isBlank()) {
+        newState = newState.copy(fullNameError = "Nama lengkap tidak boleh kosong")
+        isValid = false
+    }
+
+    if (state.phoneNumber.isBlank()) {
+        newState = newState.copy(phoneNumberError = "Nomor telepon tidak boleh kosong")
+        isValid = false
+    }
+
+    if (state.email.isBlank()) {
+        newState = newState.copy(emailError = "Email tidak boleh kosong")
+        isValid = false
+    } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
+        newState = newState.copy(emailError = "Format email tidak valid")
+        isValid = false
+    }
+
+    if (state.password.isBlank()) {
+        newState = newState.copy(passwordError = "Kata sandi tidak boleh kosong")
+        isValid = false
+    } else if (state.password.length < 8) {
+        newState = newState.copy(passwordError = "Kata sandi minimal 8 karakter")
+        isValid = false
+    } else if (!state.password.any { it.isUpperCase() }) {
+        newState = newState.copy(passwordError = "Kata sandi harus memiliki setidaknya satu huruf kapital")
+        isValid = false
+    } else if (!state.password.any { it.isDigit() }) {
+        newState = newState.copy(passwordError = "Kata sandi harus memiliki setidaknya satu angka")
+        isValid = false
+    }
+
+    if (state.confirmPassword.isBlank()) {
+        newState = newState.copy(confirmPasswordError = "Konfirmasi kata sandi tidak boleh kosong")
+        isValid = false
+    } else if (state.password != state.confirmPassword) {
+        newState = newState.copy(confirmPasswordError = "Kata sandi tidak cocok")
+        isValid = false
+    }
+
+    onStateChange(newState)
+    return isValid
+}
+
+// Fungsi autentikasi Firebase
+fun signInWithEmail(
+    auth: FirebaseAuth,
+    email: String,
+    password: String,
+    context: android.content.Context,
+    onComplete: (Boolean) -> Unit
+) {
+    auth.signInWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                onComplete(true)
+            } else {
+                Toast.makeText(context, "Login gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                onComplete(false)
+            }
+        }
+}
+
+fun signUpWithEmail(
+    auth: FirebaseAuth,
+    email: String,
+    password: String,
+    context: android.content.Context,
+    onComplete: (Boolean) -> Unit
+) {
+    auth.createUserWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                onComplete(true)
+            } else {
+                Toast.makeText(context, "Registrasi gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                onComplete(false)
+            }
+        }
+}
+
 @Preview(showBackground = true, device = Devices.PIXEL_4, backgroundColor = 0xFFCCCCCC)
 @Composable
-fun LoginScreenPreview() {
-    MaterialTheme { // Apply MaterialTheme for consistent styling
-        // This Box simulates the device screen or a card with rounded corners.
+fun AuthScreenPreview() {
+    MaterialTheme {
         Box(
             modifier = Modifier
-                .fillMaxSize() // Takes full preview space
-                .padding(0.dp) // Example padding if it were a card on a different background
+                .fillMaxSize()
+                .padding(0.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize() // Content fills this inner box
-                    .clip(RoundedCornerShape(20.dp)) // Simplified rounded corners
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
             ) {
-                LoginScreenContent()
+                AuthScreen()
             }
         }
     }
