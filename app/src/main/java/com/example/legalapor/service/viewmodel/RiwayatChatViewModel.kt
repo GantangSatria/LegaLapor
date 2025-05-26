@@ -9,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class RiwayatChatViewModel (private val chatId: String) : ViewModel() {
+class RiwayatChatViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
 

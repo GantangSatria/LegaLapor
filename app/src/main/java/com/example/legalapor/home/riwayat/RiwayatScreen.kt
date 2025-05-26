@@ -12,19 +12,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.legalapor.home.riwayat.components.RiwayatItem
 import com.example.legalapor.home.riwayat.ui.theme.LegaLaporTheme
 import com.example.legalapor.home.riwayat.ui.theme.BackgroundGray
 import com.example.legalapor.models.ChatModel
 import com.example.legalapor.models.ChatPreviewModel
 import com.example.legalapor.models.LawyerModel
+import com.example.legalapor.navigation.NavRoutes
 import com.example.legalapor.service.viewmodel.ChatListViewModel
 import com.example.legalapor.utils.formatDate
 import com.google.firebase.Timestamp
 
 @Composable
-fun RiwayatScreen(viewModel: ChatListViewModel = viewModel()) {
+fun RiwayatScreen(navController: NavHostController) {
+    val currentBackStackEntry = navController.currentBackStackEntryAsState()
+    val navBackStackEntry = remember(currentBackStackEntry.value) {
+        navController.getBackStackEntry(NavRoutes.Riwayat.route)
+    }
+    val viewModel: ChatListViewModel = viewModel(navBackStackEntry)
+
+//    LaunchedEffect(Unit) {
+//        viewModel.fetchChatPreviews()
+//    }
+
     val chatPreviews by viewModel.chatPreviews.collectAsState()
+
+
+
 
     if (chatPreviews.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

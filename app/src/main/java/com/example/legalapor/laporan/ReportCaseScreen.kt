@@ -50,7 +50,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.legalapor.service.viewmodel.ReportCaseViewModel
+import com.google.firebase.auth.FirebaseAuth
+import java.net.URLEncoder
 
 class ReportCaseScreen {
 
@@ -59,8 +62,9 @@ class ReportCaseScreen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportCasePage(
+    navController: NavController,
     viewModel: ReportCaseViewModel = viewModel(),
-    onNavigateBack: () -> Unit,
+    onNavigateBack: () -> Unit = { navController.popBackStack() },
     lawyerId: String,
     lawyerName: String
 ) {
@@ -69,8 +73,37 @@ fun ReportCasePage(
 
     LaunchedEffect(Unit) {
         viewModel.updateLawyerNameToReportTo(lawyerName)
-//        viewModel.setLawyerId(lawyerId)
+        viewModel.setLawyerId(lawyerId)
     }
+
+    val reportSubmitted by viewModel.reportSubmitted.collectAsState()
+    var chatId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(chatId) {
+        chatId?.let {
+            val encodedLawyerName = URLEncoder.encode(lawyerName, "UTF-8")
+            navController.navigate("chat/$it/$lawyerId/$encodedLawyerName")
+        }
+    }
+
+    val currentUser = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+    fun handleSubmit() {
+        viewModel.submitReport()
+        viewModel.getOrCreateChatId(currentUser, lawyerId.toInt()) { generatedChatId ->
+            viewModel.sendInitialMessageIfNeeded(generatedChatId)
+            chatId = generatedChatId
+        }
+    }
+
+//    fun handleSubmit() {
+//        viewModel.submitReport()
+//        viewModel.getOrCreateChatId(lawyerId.toInt()) { generatedChatId ->
+//            chatId = generatedChatId
+//        }
+//    }
+
+
     Scaffold (
         topBar = {
             CenterAlignedTopAppBar(
@@ -170,7 +203,7 @@ fun ReportCasePage(
 
             // Submit Button
             Button(
-                onClick = { viewModel.submitReport() },
+                onClick = { handleSubmit() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = declarationCheckedLocally
             ) {
@@ -225,12 +258,12 @@ class FakeReportCaseViewModel : ReportCaseViewModel() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ReportCaseScreenPreview() {
-        ReportCasePage(viewModel = FakeReportCaseViewModel(),
-            onNavigateBack = {},
-            lawyerId = "",
-            lawyerName = "febro"
-        )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun ReportCaseScreenPreview() {
+//        ReportCasePage(viewModel = FakeReportCaseViewModel(),
+//            onNavigateBack = {},
+//            lawyerId = "",
+//            lawyerName = "febro"
+//        )
+//}

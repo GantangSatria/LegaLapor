@@ -146,7 +146,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
             when (currentRoute) {
                 NavRoutes.Beranda.route -> BerandaScreen()
                 NavRoutes.Forum.route -> ForumScreen()
-                NavRoutes.Riwayat.route -> RiwayatScreen()
+                NavRoutes.Riwayat.route -> RiwayatScreen(navController)
                 NavRoutes.Lainnya.route -> {/* SettingsScreen() */}
             }
         }
