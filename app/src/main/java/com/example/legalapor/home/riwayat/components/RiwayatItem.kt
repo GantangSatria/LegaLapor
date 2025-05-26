@@ -2,9 +2,9 @@ package com.example.legalapor.home.riwayat.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,7 +25,7 @@ fun RiwayatItem(
     lawyerTitle: String,
     lastMessage: String,
     date: String,
-    profileImage: Int, // Resource ID untuk gambar profil
+    profileImage: Int? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -46,15 +46,43 @@ fun RiwayatItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Profile Image
-            Image(
-                painter = painterResource(id = profileImage),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+            // Profile Image - Kotak dengan border dan rounded corners
+            if (profileImage != null) {
+                Image(
+                    painter = painterResource(id = profileImage),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp)) // Rounded corners
+                        .border(
+                            width = 2.dp,
+                            color = Color(0xFFE0E0E0),
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Avatar dengan inisial - kotak dengan border
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF4A6CF7))
+                        .border(
+                            width = 2.dp,
+                            color = Color(0xFFE0E0E0),
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = getInitials(lawyerName),
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -97,4 +125,12 @@ fun RiwayatItem(
             )
         }
     }
+}
+
+// Helper function untuk get initials
+private fun getInitials(name: String): String {
+    return name.split(" ")
+        .take(2)
+        .map { it.first().uppercaseChar() }
+        .joinToString("")
 }

@@ -1,3 +1,4 @@
+// File: RiwayatScreen.kt
 package com.example.legalapor.home.riwayat
 
 import androidx.compose.foundation.background
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.legalapor.R
 import com.example.legalapor.home.riwayat.components.RiwayatItem
 import com.example.legalapor.home.riwayat.ui.theme.LegaLaporTheme
 import com.example.legalapor.home.riwayat.ui.theme.BackgroundGray
@@ -36,7 +38,7 @@ fun RiwayatScreen() {
                 lawyerTitle = "Perkawinan dan Perceraian",
                 lastMessage = "Laporan Ibu akan segera kami tanjuti...",
                 date = "5 Sep",
-                profileImage = android.R.drawable.ic_menu_gallery // Ganti dengan resource yang sesuai
+                profileImage = R.drawable.lawyer1_reza // Ganti dengan resource gambar yang sesuai
             ),
             RiwayatData(
                 id = 2,
@@ -44,7 +46,7 @@ fun RiwayatScreen() {
                 lawyerTitle = "Hukum Pidana",
                 lastMessage = "Terima kasih atas penjelasan yang detail...",
                 date = "3 Sep",
-                profileImage = android.R.drawable.ic_menu_gallery
+                profileImage = R.drawable.lawyer1_reza
             ),
             RiwayatData(
                 id = 3,
@@ -52,7 +54,7 @@ fun RiwayatScreen() {
                 lawyerTitle = "Hukum Perdata",
                 lastMessage = "Saya akan membantu menyelesaikan kasus ini...",
                 date = "1 Sep",
-                profileImage = android.R.drawable.ic_menu_gallery
+                profileImage = R.drawable.lawyer1_reza
             )
         )
     }
@@ -103,5 +105,3 @@ fun RiwayatScreenPreview() {
         RiwayatScreen()
     }
 }
-
-
