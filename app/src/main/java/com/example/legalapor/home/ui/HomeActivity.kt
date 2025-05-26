@@ -87,7 +87,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
 //    var selectedItemIndex by remember { mutableIntStateOf(0) }
 
     val actualSelectableNavItems = listOf(
-        NavItem("Home", Icons.Filled.Home, NavRoutes.Beranda.route),
+        NavItem("Beranda", Icons.Filled.Home, NavRoutes.Beranda.route),
         NavItem("Forum", Icons.AutoMirrored.Outlined.Send, NavRoutes.Forum.route),
         NavItem("Riwayat", Icons.Filled.Person, NavRoutes.Riwayat.route),
         NavItem("Lainnya", Icons.Filled.Settings, NavRoutes.Lainnya.route)
@@ -105,16 +105,6 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
         topBar = {
             CustomTopAppBar(userName = userViewModel.name.value)
         },
-//        content = {
-//            Box(modifier = Modifier.padding(it).fillMaxSize(),) {
-//                when (selectedItemIndex) {
-//                    0 -> BerandaScreen()
-////                    1 -> ForumScreen()
-////                    2 -> RiwayatScreen()
-////                    3 -> SettingsScreen()
-//                }
-//            }
-//        },
         bottomBar = {
             BottomAppBar(
                 modifier = Modifier.height(120.dp),

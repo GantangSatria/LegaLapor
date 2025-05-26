@@ -1,5 +1,6 @@
 package com.example.legalapor.home.riwayat
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,7 +64,9 @@ fun RiwayatScreen(navController: NavHostController) {
                     date = formatDate(preview.chat.lastMessageTimestamp),
                     profileImageUrl = preview.lawyer.imageUrl,
                     onClick = {
-                        // Navigasi ke chat detail
+                        navController.navigate(
+                            "chat/${preview.chat.chatId}/${preview.lawyer.id}/${Uri.encode(preview.lawyer.name)}"
+                        )
                     }
                 )
             }

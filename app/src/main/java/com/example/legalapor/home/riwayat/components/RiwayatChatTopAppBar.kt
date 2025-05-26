@@ -34,14 +34,13 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.legalapor.models.LawyerModel
 
-class RiwayatChatTopAppBar {
-}
 
 @Composable
 fun RiwayatChatTopAppBar(
     lawyer: LawyerModel,
     onNavigateBack: () -> Unit
 ) {
+    println("RiwayatChatTopAppBar imageUrl = ${lawyer.imageUrl}")
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -75,7 +74,7 @@ fun RiwayatChatTopAppBar(
                 contentDescription = "Profile picture of ${lawyer.name}",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(width = 88.dp, height = 73.dp)
+                    .size(53.dp)
                     .clip(RoundedCornerShape(8.dp))
             )
             Spacer(modifier = Modifier.width(12.dp))

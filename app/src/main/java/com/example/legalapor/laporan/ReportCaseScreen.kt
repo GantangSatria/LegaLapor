@@ -1,5 +1,6 @@
 package com.example.legalapor.laporan
 
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.example.legalapor.navigation.NavRoutes
 import com.example.legalapor.service.viewmodel.ReportCaseViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.net.URLEncoder
@@ -62,7 +65,7 @@ class ReportCaseScreen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportCasePage(
-    navController: NavController,
+    navController: NavHostController,
     viewModel: ReportCaseViewModel = viewModel(),
     onNavigateBack: () -> Unit = { navController.popBackStack() },
     lawyerId: String,
@@ -88,20 +91,21 @@ fun ReportCasePage(
 
     val currentUser = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-    fun handleSubmit() {
+    fun handleSubmit(navController: NavHostController) {
         viewModel.submitReport()
         viewModel.getOrCreateChatId(currentUser, lawyerId.toInt()) { generatedChatId ->
             viewModel.sendInitialMessageIfNeeded(generatedChatId)
             chatId = generatedChatId
+
+            navController.navigate("chat/$generatedChatId/$lawyerId/$lawyerName") {
+                launchSingleTop = true
+                popUpTo(NavRoutes.Beranda.route) {
+                    inclusive = false
+                }
+
+            }
         }
     }
-
-//    fun handleSubmit() {
-//        viewModel.submitReport()
-//        viewModel.getOrCreateChatId(lawyerId.toInt()) { generatedChatId ->
-//            chatId = generatedChatId
-//        }
-//    }
 
 
     Scaffold (
@@ -203,7 +207,7 @@ fun ReportCasePage(
 
             // Submit Button
             Button(
-                onClick = { handleSubmit() },
+                onClick = { handleSubmit(navController) },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = declarationCheckedLocally
             ) {
