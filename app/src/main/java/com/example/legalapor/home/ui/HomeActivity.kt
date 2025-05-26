@@ -1,5 +1,6 @@
 package com.example.legalapor.home.ui
 
+import ForumScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -142,7 +143,7 @@ fun MainScreen(navController: NavHostController) {
         Box(modifier = Modifier.padding(padding)) {
             when (currentRoute) {
                 NavRoutes.Beranda.route -> BerandaScreen()
-                NavRoutes.Forum.route -> {/* ForumScreen() */}
+                NavRoutes.Forum.route -> ForumScreen()
                 NavRoutes.Riwayat.route -> RiwayatScreen()
                 NavRoutes.Lainnya.route -> {/* SettingsScreen() */}
             }

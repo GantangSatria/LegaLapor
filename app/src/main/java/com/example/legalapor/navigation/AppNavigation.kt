@@ -60,4 +60,3 @@ fun AppNavigation(navController: NavHostController) {
 //fun ReportScreen(navController: NavHostController) {
 //    LawyerSelectPage()
 //}
-
