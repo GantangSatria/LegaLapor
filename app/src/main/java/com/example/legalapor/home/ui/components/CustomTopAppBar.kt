@@ -62,11 +62,11 @@ fun CustomTopAppBar(userName: String) {
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Search Icon", tint = Color.Gray) },
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(12.dp)), // Rounded corners for the TextField background
-            shape = RoundedCornerShape(12.dp), // Shape for the outline
+                .background(Color.White, RoundedCornerShape(12.dp)),
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent, // No border when focused
-                unfocusedBorderColor = Color.Transparent, // No border when unfocused
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface
