@@ -13,4 +13,6 @@ sealed class NavRoutes(val route: String) {
         fun createRoute(lawyerId: String, lawyerName: String) =
             "reportCase/$lawyerId/${Uri.encode(lawyerName)}"
     }
+    object Register : NavRoutes("registrasi")
+    object Login : NavRoutes("login")
 }

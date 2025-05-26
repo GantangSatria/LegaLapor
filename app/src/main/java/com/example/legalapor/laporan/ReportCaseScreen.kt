@@ -1,5 +1,9 @@
 package com.example.legalapor.laporan
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 //import androidx.compose.foundation.layout.ColumnScopeInstance.align
 //import androidx.compose.foundation.layout.FlowColumnScopeInstance.align
@@ -12,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Scaffold
@@ -37,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -103,12 +109,19 @@ fun ReportCasePage(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Judul Section
-            OutlinedTextField(
-                value = uiState.reportTitle,
-                onValueChange = { viewModel.updateReportTitle(it) },
-                label = { Text("Judul") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Box(modifier = Modifier
+                .border(shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, color = Color.White))
+                .shadow(elevation = 2.dp)
+                .padding(all = 13.dp)
+            ) {
+                OutlinedTextField(
+                    value = uiState.reportTitle,
+                    onValueChange = { viewModel.updateReportTitle(it) },
+                    label = { Text("Judul") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Pelapor Section
@@ -201,7 +214,8 @@ fun FormTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         maxLines = maxLines,
         minLines = minLines,
-        readOnly = readOnly
+        readOnly = readOnly,
+//        colors = Color(0xFFF4F5F7)
     )
 }
 

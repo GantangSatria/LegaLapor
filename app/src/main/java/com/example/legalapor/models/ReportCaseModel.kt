@@ -2,7 +2,7 @@ package com.example.legalapor.models
 
 data class ReportCaseModel(
     // "Kepada" - This might be pre-filled or selected from another screen
-    val lawyerNameToReportTo: String = "", // e.g., "Reza Simanjuntak, S.H, M.H."
+    val lawyerNameToReportTo: String = "",
 
     // Judul Laporan
     val reportTitle: String = "",
