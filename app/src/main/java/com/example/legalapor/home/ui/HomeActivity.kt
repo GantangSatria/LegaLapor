@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -62,6 +63,7 @@ import com.example.legalapor.home.ui.theme.LegaLaporTheme
 import com.example.legalapor.laporan.LawyerSelectPage
 import com.example.legalapor.navigation.AppNavigation
 import com.example.legalapor.navigation.NavRoutes
+import com.example.legalapor.service.viewmodel.UserViewModel
 
 //class HomeActivity : ComponentActivity() {
 //    override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,7 +80,7 @@ import com.example.legalapor.navigation.NavRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = viewModel()) {
 //    val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
@@ -101,7 +103,7 @@ fun MainScreen(navController: NavHostController) {
 
     Scaffold (
         topBar = {
-            CustomTopAppBar(userName = "Febro")
+            CustomTopAppBar(userName = userViewModel.name.value)
         },
 //        content = {
 //            Box(modifier = Modifier.padding(it).fillMaxSize(),) {
@@ -197,9 +199,8 @@ fun SimpleComposablePreview() {
     MainScreen(rememberNavController())
 }
 
-
+// local class untuk ui
 data class NavItem(val title: String, val icon: ImageVector, val route: String)
-
 sealed class NavBarElement
 data class NavItemData(val navItem: NavItem, val originalIndex: Int) : NavBarElement()
 object SpacerData : NavBarElement()

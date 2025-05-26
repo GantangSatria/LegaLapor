@@ -54,6 +54,7 @@ class BerandaActivity : ComponentActivity() {
 }
 
 val chipItems = listOf("Pidana", "Perdata", "Perpajakan", "Kepailitan", "Perkawinan dan Perceraian", "Pertanahan", "Tenaga Kerja", "Hak Cipta");
+// nuat preview
 var lawyerItems = listOf(LawyerModel(1, "Farida Choirunnisa, S.H.", "", "Pengalaman 3 Tahun", "220 Kasus", "PBH Peradi", 4.5f, 38, "https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/public/lawyer-image//StockCake-Lawyer%20holding%20book_1725547095%201.png"),
     LawyerModel(2, "Zayn Maliki Al-Hasc, S.H., M.H.", "", "Pengalaman 6 Tahun", "110 Kasus", "YLBHI", 4.8f, 52, ""),
     LawyerModel(3, "Aisha Putri, S.H.", "", "Pengalaman 5 Tahun", "180 Kasus", "LBH Jakarta", 4.6f, 45, ""));
@@ -101,6 +102,9 @@ fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
                     )
                 }
             }
+
+            Spacer(Modifier.height(8.dp))
+
             LazyRow (
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -116,9 +120,7 @@ fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
                 modifier = Modifier.height(16.dp)
             )
 
-            Text(text = "Pilih Kategori", fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-
-            Text(text = "tes")
+//            Text(text = "Pilih Kategori", fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
         }
     }
 }

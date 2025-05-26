@@ -1,4 +1,3 @@
-// File: RiwayatScreen.kt
 package com.example.legalapor.home.riwayat
 
 import androidx.compose.foundation.background
@@ -10,68 +9,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.legalapor.R
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.legalapor.home.riwayat.components.RiwayatItem
 import com.example.legalapor.home.riwayat.ui.theme.LegaLaporTheme
 import com.example.legalapor.home.riwayat.ui.theme.BackgroundGray
-
-data class RiwayatData(
-    val id: Int,
-    val lawyerName: String,
-    val lawyerTitle: String,
-    val lastMessage: String,
-    val date: String,
-    val profileImage: Int // Resource ID
-)
+import com.example.legalapor.models.ChatModel
+import com.example.legalapor.models.ChatPreviewModel
+import com.example.legalapor.models.LawyerModel
+import com.example.legalapor.service.viewmodel.ChatListViewModel
+import com.example.legalapor.utils.formatDate
+import com.google.firebase.Timestamp
 
 @Composable
-fun RiwayatScreen() {
-    // Sample data - ganti dengan data real dari ViewModel/Repository
-    val riwayatList = remember {
-        listOf(
-            RiwayatData(
-                id = 1,
-                lawyerName = "Reza Simanjuntak, S.H, M.H.",
-                lawyerTitle = "Perkawinan dan Perceraian",
-                lastMessage = "Laporan Ibu akan segera kami tanjuti...",
-                date = "5 Sep",
-                profileImage = R.drawable.lawyer1_reza // Ganti dengan resource gambar yang sesuai
-            ),
-            RiwayatData(
-                id = 2,
-                lawyerName = "Dr. Ahmad Santoso, S.H.",
-                lawyerTitle = "Hukum Pidana",
-                lastMessage = "Terima kasih atas penjelasan yang detail...",
-                date = "3 Sep",
-                profileImage = R.drawable.lawyer1_reza
-            ),
-            RiwayatData(
-                id = 3,
-                lawyerName = "Maria Susanti, S.H., M.Kn.",
-                lawyerTitle = "Hukum Perdata",
-                lastMessage = "Saya akan membantu menyelesaikan kasus ini...",
-                date = "1 Sep",
-                profileImage = R.drawable.lawyer1_reza
-            )
-        )
-    }
+fun RiwayatScreen(viewModel: ChatListViewModel = viewModel()) {
+    val chatPreviews by viewModel.chatPreviews.collectAsState()
 
-    // Content - hanya list riwayat
-    if (riwayatList.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Belum ada riwayat chat",
-                color = Color.Gray,
-                textAlign = TextAlign.Center
-            )
+    if (chatPreviews.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Belum ada riwayat chat", color = Color.Gray)
         }
     } else {
         LazyColumn(
@@ -81,16 +38,15 @@ fun RiwayatScreen() {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(riwayatList) { riwayat ->
+            items(chatPreviews) { preview ->
                 RiwayatItem(
-                    lawyerName = riwayat.lawyerName,
-                    lawyerTitle = riwayat.lawyerTitle,
-                    lastMessage = riwayat.lastMessage,
-                    date = riwayat.date,
-                    profileImage = riwayat.profileImage,
+                    lawyerName = preview.lawyer.name,
+                    lawyerTitle = preview.lawyer.qualifications,
+                    lastMessage = preview.chat.lastMessageText,
+                    date = formatDate(preview.chat.lastMessageTimestamp),
+                    profileImageUrl = preview.lawyer.imageUrl,
                     onClick = {
-                        // Handle item click - navigate to chat detail
-                        // Implementasi navigasi ke detail chat
+                        // Navigasi ke chat detail
                     }
                 )
             }
@@ -98,10 +54,80 @@ fun RiwayatScreen() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 fun RiwayatScreenPreview() {
+    val dummyChatPreviews = listOf(
+        ChatPreviewModel(
+            chat = ChatModel(
+                chatId = "chat1",
+                userIds = listOf("user1", "lawyer1"),
+                lastMessageText = "Halo, apa kabar?",
+                lastMessageTimestamp = Timestamp.now(),
+                lawyerId = 1,
+                qualification = "Hukum Perdata"
+            ),
+            lawyer = LawyerModel(
+                id = 1,
+                name = "Reza Simanjuntak, S.H., M.H.",
+                qualifications = "Hukum Perdata",
+                experience = "10 tahun",
+                cases = "Perceraian, Sengketa Tanah",
+                organization = "Lembaga Bantuan Hukum Jakarta",
+                rating = 4.8f,
+                reviewCount = 124,
+                imageUrl = "https://picsum.photos/200"
+            )
+        ),
+        ChatPreviewModel(
+            chat = ChatModel(
+                chatId = "chat2",
+                userIds = listOf("user2", "lawyer2"),
+                lastMessageText = "Terima kasih atas bantuan Anda.",
+                lastMessageTimestamp = com.google.firebase.Timestamp.now(),
+                lawyerId = 2,
+                qualification = "Hukum Pidana"
+            ),
+            lawyer = LawyerModel(
+                id = 2,
+                name = "Maria Susanti, S.H., M.Kn.",
+                qualifications = "Hukum Pidana",
+                experience = "8 tahun",
+                cases = "Kasus Kriminal",
+                organization = "Kantor Pengacara Jakarta",
+                rating = 4.6f,
+                reviewCount = 80,
+                imageUrl = "https://picsum.photos/201"
+            )
+        )
+    )
+
     LegaLaporTheme {
-        RiwayatScreen()
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundGray),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(dummyChatPreviews) { preview ->
+                RiwayatItem(
+                    lawyerName = preview.lawyer.name,
+                    lawyerTitle = preview.lawyer.qualifications,
+                    lastMessage = preview.chat.lastMessageText,
+                    date = formatDate(preview.chat.lastMessageTimestamp),
+                    profileImageUrl = preview.lawyer.imageUrl,
+                    onClick = {}
+                )
+            }
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewRiwayatScreen() {
+    LegaLaporTheme {
+        RiwayatScreenPreview()
     }
 }

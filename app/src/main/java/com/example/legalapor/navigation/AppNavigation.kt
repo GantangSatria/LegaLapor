@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.legalapor.AuthScreen
 import com.example.legalapor.home.beranda.ui.BerandaScreen
 import com.example.legalapor.home.riwayat.RiwayatScreen
 import com.example.legalapor.home.ui.MainScreen
@@ -21,7 +22,7 @@ fun AppNavigation(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.Beranda.route
+        startDestination = NavRoutes.Auth.route
     ) {
         composable(NavRoutes.Beranda.route) { MainScreen(navController) }
         composable(NavRoutes.Forum.route) { MainScreen(navController) }
@@ -46,9 +47,12 @@ fun AppNavigation(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
+        composable(NavRoutes.Auth.route) {
+            AuthScreen(navController = navController)
+        }
+
     }
-
-
 }
 
 //@Composable
