@@ -1,0 +1,10 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        android:width="100dp"  <!-- Atur lebar logo -->
+    android:height="100dp" <!-- Atur tinggi logo -->
+    android:gravity="center"
+    <bitmap
+        android:src="@drawable/logo_legalapor"
+        android:gravity="center" />
+</item>
+    </layer-list>

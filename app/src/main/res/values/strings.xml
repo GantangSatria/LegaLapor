@@ -3,5 +3,10 @@
     <string name="title_activity_home">HomeActivity</string>
     <string name="title_activity_lainnya">LainnyaActivity</string>
     <string name="title_activity_beranda">BerandaActivity</string>
+<<<<<<< HEAD
     <string name="title_activity_forum">ForumActivity</string>
+=======
+    <string name="title_activity_lawyer_select_screen">LawyerSelectScreen</string>
+    <string name="title_activity_riwayat">RiwayatActivity</string>
+>>>>>>> 008ed07e6ad051e00be86fe0d934c329bd5e4b0d
 </resources>
