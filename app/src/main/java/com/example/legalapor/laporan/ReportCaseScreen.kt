@@ -1,5 +1,6 @@
 package com.example.legalapor.laporan
 
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,7 +51,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.example.legalapor.navigation.NavRoutes
 import com.example.legalapor.service.viewmodel.ReportCaseViewModel
+import com.google.firebase.auth.FirebaseAuth
+import java.net.URLEncoder
 
 class ReportCaseScreen {
 
@@ -59,8 +65,9 @@ class ReportCaseScreen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportCasePage(
+    navController: NavHostController,
     viewModel: ReportCaseViewModel = viewModel(),
-    onNavigateBack: () -> Unit,
+    onNavigateBack: () -> Unit = { navController.popBackStack() },
     lawyerId: String,
     lawyerName: String
 ) {
@@ -69,8 +76,38 @@ fun ReportCasePage(
 
     LaunchedEffect(Unit) {
         viewModel.updateLawyerNameToReportTo(lawyerName)
-//        viewModel.setLawyerId(lawyerId)
+        viewModel.setLawyerId(lawyerId)
     }
+
+    val reportSubmitted by viewModel.reportSubmitted.collectAsState()
+    var chatId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(chatId) {
+        chatId?.let {
+            val encodedLawyerName = URLEncoder.encode(lawyerName, "UTF-8")
+            navController.navigate("chat/$it/$lawyerId/$encodedLawyerName")
+        }
+    }
+
+    val currentUser = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+    fun handleSubmit(navController: NavHostController) {
+        viewModel.submitReport()
+        viewModel.getOrCreateChatId(currentUser, lawyerId.toInt()) { generatedChatId ->
+            viewModel.sendInitialMessageIfNeeded(generatedChatId)
+            chatId = generatedChatId
+
+            navController.navigate("chat/$generatedChatId/$lawyerId/$lawyerName") {
+                launchSingleTop = true
+                popUpTo(NavRoutes.Beranda.route) {
+                    inclusive = false
+                }
+
+            }
+        }
+    }
+
+
     Scaffold (
         topBar = {
             CenterAlignedTopAppBar(
@@ -170,7 +207,7 @@ fun ReportCasePage(
 
             // Submit Button
             Button(
-                onClick = { viewModel.submitReport() },
+                onClick = { handleSubmit(navController) },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = declarationCheckedLocally
             ) {
@@ -225,12 +262,12 @@ class FakeReportCaseViewModel : ReportCaseViewModel() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ReportCaseScreenPreview() {
-        ReportCasePage(viewModel = FakeReportCaseViewModel(),
-            onNavigateBack = {},
-            lawyerId = "",
-            lawyerName = "febro"
-        )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun ReportCaseScreenPreview() {
+//        ReportCasePage(viewModel = FakeReportCaseViewModel(),
+//            onNavigateBack = {},
+//            lawyerId = "",
+//            lawyerName = "febro"
+//        )
+//}
