@@ -15,13 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.legalapor.home.ui.components.CustomTopAppBar
 import com.example.legalapor.laporan.components.SelectableLawyerCard
 import com.example.legalapor.laporan.ui.theme.LegaLaporTheme
 import com.example.legalapor.models.LawyerModel
+import com.example.legalapor.navigation.NavRoutes
 import com.example.legalapor.service.viewmodel.LawyerSelectViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +42,7 @@ import kotlinx.coroutines.flow.StateFlow
 //}
 
 @Composable
-fun LawyerSelectPage(viewModel: LawyerSelectViewModel = viewModel()) {
+fun LawyerSelectPage( navController: NavController, viewModel: LawyerSelectViewModel = viewModel(),) {
     val lawyers by viewModel.lawyers.collectAsState()
     Scaffold(
         topBar = {CustomTopAppBar(userName = "")},
@@ -55,10 +58,9 @@ fun LawyerSelectPage(viewModel: LawyerSelectViewModel = viewModel()) {
                    verticalArrangement = Arrangement.spacedBy(16.dp)
                ){
                    items(lawyers) { lawyer ->
-                    SelectableLawyerCard(
-                        lawyer = lawyer,
-                        onClick = { viewModel.onLawyerClicked(lawyer) }
-                    )
+                       SelectableLawyerCard(lawyer = lawyer) {
+                           navController.navigate(NavRoutes.ReportCase.createRoute(lawyer.id.toString(), lawyer.name))
+                       }
                    }
                }
            }
@@ -84,5 +86,6 @@ class FakeLawyerSelectViewModel : LawyerSelectViewModel() {
 fun LawyerSelectPagePreview() {
     LawyerSelectPage(
         viewModel = FakeLawyerSelectViewModel(),
+        navController = NavController(context = LocalContext.current)
     )
 }

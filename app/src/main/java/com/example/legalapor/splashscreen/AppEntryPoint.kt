@@ -19,6 +19,6 @@ fun AppEntryPoint() {
             onSkip = { /* aksi skip onboarding */ }
         )
     } else {
-        MainScreen(navController = rememberNavController() )
+        MainScreen(navController = rememberNavController())
     }
 }
