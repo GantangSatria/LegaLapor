@@ -13,8 +13,34 @@
         android:theme="@style/Theme.LegaLapor"
         tools:targetApi="31">
         <activity
+            android:name=".home.riwayat.RiwayatActivity"
+            android:exported="false"
+            android:label="@string/title_activity_riwayat"
+            android:theme="@style/Theme.LegaLapor" />
+        <activity
+            android:name=".laporan.LawyerSelectScreen"
+            android:exported="false"
+            android:label="@string/title_activity_lawyer_select_screen"
+            android:theme="@style/Theme.LegaLapor" />
+        <activity
+            android:name=".home.lainnya.LainnyaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_lainnya"
+            android:theme="@style/Theme.LegaLapor" />
+        <activity
+            android:name=".home.beranda.ui.BerandaActivity"
+            android:exported="false"
+            android:label="@string/title_activity_beranda"
+            android:theme="@style/Theme.LegaLapor" />
+        <activity
+            android:name=".home.ui.HomeActivity"
+            android:exported="false"
+            android:label="@string/title_activity_home"
+            android:theme="@style/Theme.LegaLapor" />
+        <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.LegaLapor.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
