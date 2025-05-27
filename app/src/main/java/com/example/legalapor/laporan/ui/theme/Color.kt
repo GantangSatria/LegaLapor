@@ -17,3 +17,9 @@ val CardWhite = Color(0xFFFFFFFF)
 val TextPrimary = Color(0xFF1A1A1A)
 val TextSecondary = Color(0xFF666666)
 val ChatBubbleUser = Color(0xFF4A90E2)
+
+// Custom colors for Laporan
+val PrimaryBlueLaporan = Color(0xFF31469F)
+val GreyBox = Color(0xFFF4F5F7)
+val KepadaBox = Color (0xFFF5F9FF)
+val CheckedBox = Color (0xFF319F43)
