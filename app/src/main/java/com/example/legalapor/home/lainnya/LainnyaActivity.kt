@@ -146,14 +146,15 @@ fun LainnyaScreen() {
         onComplete: (String) -> Unit
     ) {
         val byteArray = uriToByteArray(imageUri, context) ?: return
-        val fileName = "user-image/${userId}_${System.currentTimeMillis()}.png"
+        val bucket = "user-image"
+        val fileName = "${userId}_${System.currentTimeMillis()}.png"
 
         val client = OkHttpClient()
         val mediaType = "image/png".toMediaType()
         val requestBody = byteArray.toRequestBody(mediaType)
 
         val request = Request.Builder()
-            .url("https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/${fileName}")
+            .url("https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/$bucket/$fileName")
             .put(requestBody)
             .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd255dm9zZHRvb3N5ZHJ0ZG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNTkxOTAsImV4cCI6MjA2MzczNTE5MH0.ZqKrqbOJqPur4ebpFt9t9JjQ1vd7GlvHt8vAr3e63bg")
             .addHeader("Content-Type", "image/png")
