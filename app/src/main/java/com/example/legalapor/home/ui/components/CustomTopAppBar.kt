@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -44,7 +45,13 @@ fun CustomTopAppBar(userName: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = Color(0xFF31469F), shape = RoundedCornerShape(30.dp))
+            .defaultMinSize(minHeight = 150.dp)
+            .background(color = Color(0xFF31469F),
+                shape = RoundedCornerShape(
+                    topStart = 0.dp,
+                    topEnd = 0.dp,
+                    bottomStart = 30.dp,
+                    bottomEnd = 30.dp))
             .padding(16.dp)
             .statusBarsPadding()
 

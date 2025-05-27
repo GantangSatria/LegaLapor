@@ -26,6 +26,7 @@ import com.example.legalapor.laporan.ui.theme.LegaLaporTheme
 import com.example.legalapor.models.LawyerModel
 import com.example.legalapor.navigation.NavRoutes
 import com.example.legalapor.service.viewmodel.LawyerSelectViewModel
+import com.example.legalapor.service.viewmodel.UserViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -42,10 +43,10 @@ import kotlinx.coroutines.flow.StateFlow
 //}
 
 @Composable
-fun LawyerSelectPage( navController: NavController, viewModel: LawyerSelectViewModel = viewModel(),) {
+fun LawyerSelectPage( navController: NavController, viewModel: LawyerSelectViewModel = viewModel(), userViewModel: UserViewModel = viewModel()) {
     val lawyers by viewModel.lawyers.collectAsState()
     Scaffold(
-        topBar = {CustomTopAppBar(userName = "")},
+        topBar = {CustomTopAppBar(userName = userViewModel.name.value)},
         content = { innerPadding ->
            Box(
                modifier = Modifier

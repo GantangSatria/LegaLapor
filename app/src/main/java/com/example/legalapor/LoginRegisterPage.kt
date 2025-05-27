@@ -38,7 +38,10 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.legalapor.models.UserModel
+import com.example.legalapor.navigation.NavRoutes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -62,7 +65,7 @@ data class AuthFormState(
 )
 
 @Composable
-fun AuthScreen() {
+fun AuthScreen(navController: NavHostController) {
     val primaryPurpleColor = Color(0xff31469f)
     val logoBrandBlue = Color(0xFF3D5AFE)
     val logoBrandTeal = Color(0xFF00BFA5)
@@ -114,7 +117,9 @@ fun AuthScreen() {
                             authState = authState.copy(isLoading = false)
                             if (success) {
                                 Toast.makeText(context, "Login berhasil!", Toast.LENGTH_SHORT).show()
-                                // Navigate to main screen
+                                navController.navigate(NavRoutes.Beranda.route) {
+                                    popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                                }
                             }
                         }
                     }
@@ -131,8 +136,7 @@ fun AuthScreen() {
                             authState = authState.copy(isLoading = false)
                             if (success) {
                                 Toast.makeText(context, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
-                                // Save additional user data (fullName, phoneNumber) to Firestore
-                                // Navigate to main screen
+                                selectedTabIndex = 0
                             }
                         }
                     }
@@ -819,7 +823,7 @@ fun AuthScreenPreview() {
                     .fillMaxSize()
                     .clip(RoundedCornerShape(20.dp))
             ) {
-                AuthScreen()
+                AuthScreen(navController = rememberNavController())
             }
         }
     }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 
 @Composable
 fun RiwayatItem(
@@ -25,112 +27,37 @@ fun RiwayatItem(
     lawyerTitle: String,
     lastMessage: String,
     date: String,
-    profileImage: Int? = null,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    profileImageUrl: String,
+    onClick: () -> Unit
 ) {
-    Card(
-        modifier = modifier
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        AsyncImage(
+            model = profileImageUrl,
+            contentDescription = null,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Profile Image - Kotak dengan border dan rounded corners
-            if (profileImage != null) {
-                Image(
-                    painter = painterResource(id = profileImage),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(RoundedCornerShape(8.dp)) // Rounded corners
-                        .border(
-                            width = 2.dp,
-                            color = Color(0xFFE0E0E0),
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                // Avatar dengan inisial - kotak dengan border
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF4A6CF7))
-                        .border(
-                            width = 2.dp,
-                            color = Color(0xFFE0E0E0),
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = getInitials(lawyerName),
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Content
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                // Lawyer Name
-                Text(
-                    text = lawyerName,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
-                )
-
-                // Lawyer Title
-                Text(
-                    text = lawyerTitle,
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-
-                // Last Message
-                Text(
-                    text = lastMessage,
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-
-            // Date
-            Text(
-                text = date,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+                .size(56.dp)
+                .clip(RoundedCornerShape(10.dp))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(text = lawyerName, style = MaterialTheme.typography.titleMedium)
+            Text(text = lawyerTitle, style = MaterialTheme.typography.bodySmall)
+            Text(text = lastMessage, style = MaterialTheme.typography.bodySmall, maxLines = 1)
         }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(text = date, style = MaterialTheme.typography.labelSmall)
     }
 }
 
-// Helper function untuk get initials
-private fun getInitials(name: String): String {
-    return name.split(" ")
-        .take(2)
-        .map { it.first().uppercaseChar() }
-        .joinToString("")
-}
+//private fun getInitials(name: String): String {
+//    return name.split(" ")
+//        .take(2)
+//        .map { it.first().uppercaseChar() }
+//        .joinToString("")
+//}
