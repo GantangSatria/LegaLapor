@@ -59,6 +59,7 @@ import com.example.legalapor.service.viewmodel.ReportCaseViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportCasePage(
+
     viewModel: ReportCaseViewModel = viewModel(),
     onNavigateBack: () -> Unit,
     lawyerId: String,

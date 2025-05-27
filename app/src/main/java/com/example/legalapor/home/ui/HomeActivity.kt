@@ -1,6 +1,7 @@
 package com.example.legalapor.home.ui
 
 import ForumScreen
+import LainnyaScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -137,7 +138,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
                 NavRoutes.Beranda.route -> BerandaScreen()
                 NavRoutes.Forum.route -> ForumScreen()
                 NavRoutes.Riwayat.route -> RiwayatScreen(navController)
-                NavRoutes.Lainnya.route -> {/* SettingsScreen() */}
+                NavRoutes.Lainnya.route -> LainnyaScreen()
             }
         }
     }
