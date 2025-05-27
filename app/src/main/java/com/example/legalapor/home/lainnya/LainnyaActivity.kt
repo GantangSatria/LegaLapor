@@ -1,873 +1,377 @@
-import androidx.compose.foundation.BorderStroke
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Wc
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import com.example.legalapor.home.lainnya.components.ProfileInfoItem
+import com.example.legalapor.models.UserModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
-import com.example.legalapor.R
+import com.google.firebase.firestore.FirebaseFirestore
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
 
-// --- Color Palette ---
-val ProfileBlue = Color(0xFF4C5FBF)
-val ProfileLightGrayBg = Color(0xFFF5F5F5)
-val ProfileIconBlue = Color(0xFF4C5FBF)
-val ProfileTextDark = Color(0xFF333333)
-val ProfileTextLight = Color(0xFF666666)
-val ProfileCardBorder = Color(0xFFE0E0E0)
-
-// Data class untuk menyimpan data user
-data class UserProfile(
-    val name: String = "",
-    val email: String = "",
-    val phone: String = "",
-    val birthDate: String = "",
-    val gender: String = ""
-)
 
 @Composable
-fun ProfileNavigationHost() {
-    val navController = rememberNavController()
+fun LainnyaScreen() {
     val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
 
-    NavHost(
-        navController = navController,
-        startDestination = "profile_main"
+    fun loadUserProfile(
+        userId: String,
+        onComplete: (UserModel?) -> Unit,
+        onError: (Exception) -> Unit
     ) {
-        composable("profile_main") {
-            ProfileScreenPage1(navController = navController, auth = auth)
-        }
-        composable("profile_settings") {
-            ProfileSettingsScreen(navController = navController, auth = auth)
-        }
-        composable("language_settings") {
-            LanguageSettingsScreen(navController = navController)
-        }
-        composable("help_screen") {
-            HelpScreen(navController = navController)
+        firestore.collection("users").document(userId).get()
+            .addOnSuccessListener { doc ->
+                val user = doc.toObject(UserModel::class.java)
+                onComplete(user)
+            }
+            .addOnFailureListener { e ->
+                onError(e)
+            }
+    }
+
+    fun saveUserProfile(
+        userId: String,
+        user: UserModel,
+        onSuccess: () -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        firestore.collection("users").document(userId).set(user)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onError(e) }
+    }
+
+    var userId by remember { mutableStateOf(auth.currentUser?.uid) }
+    var userProfile by remember { mutableStateOf<UserModel?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isEditMode by remember { mutableStateOf(false) }
+
+    var editableName by remember { mutableStateOf("") }
+    var editableDob by remember { mutableStateOf("") }
+    var editableFullPhoneNumber by remember { mutableStateOf("") }
+    var editableGender by remember { mutableStateOf("") }
+
+    LaunchedEffect(userId) {
+        userId?.let {
+            loadUserProfile(
+                userId = it,
+                onComplete = { profile ->
+                    userProfile = profile
+                    editableName = profile?.name ?: ""
+                    editableDob = profile?.birthdate ?: ""
+                    editableFullPhoneNumber = profile?.phoneNumber ?: ""
+                    editableGender = profile?.gender ?: ""
+                    isLoading = false
+                },
+                onError = {
+                    isLoading = false
+                }
+            )
         }
     }
-}
 
-@Composable
-fun ProfileScreenPage1(navController: NavController, auth: FirebaseAuth) {
-    val currentUser = auth.currentUser
-    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ProfileLightGrayBg)
-    ) {
-        ProfileHeader()
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-40).dp)
-        ) {
-            ProfileCard(currentUser = currentUser)
+    fun uriToByteArray(uri: Uri, context: Context): ByteArray? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            inputStream?.readBytes()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
+    }
 
-        Spacer(modifier = Modifier.height(8.dp))
-        SettingsMenu(
-            onProfileSettingsClick = { navController.navigate("profile_settings") },
-            onLanguageClick = { navController.navigate("language_settings") },
-            onHelpClick = { navController.navigate("help_screen") },
-            onLogoutClick = {
-                coroutineScope.launch {
-                    auth.signOut()
-                    // Navigate to login screen
+    fun uploadImageToSupabaseAndSaveUrl(
+        userId: String,
+        imageUri: Uri,
+        context: Context,
+        onComplete: (String) -> Unit
+    ) {
+        val byteArray = uriToByteArray(imageUri, context) ?: return
+        val fileName = "user-image/${userId}_${System.currentTimeMillis()}.png"
+
+        val client = OkHttpClient()
+        val mediaType = "image/png".toMediaType()
+        val requestBody = byteArray.toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url("https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/${fileName}")
+            .put(requestBody)
+            .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd255dm9zZHRvb3N5ZHJ0ZG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNTkxOTAsImV4cCI6MjA2MzczNTE5MH0.ZqKrqbOJqPur4ebpFt9t9JjQ1vd7GlvHt8vAr3e63bg")
+            .addHeader("Content-Type", "image/png")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val publicUrl = "https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/public/$fileName"
+
+                    FirebaseFirestore.getInstance().collection("users").document(userId)
+                        .update("profileImageUrl", publicUrl)
+                        .addOnSuccessListener { onComplete(publicUrl) }
+                } else {
+                    println("Upload failed: ${response.message}")
                 }
             }
-        )
-    }
-}
-
-@Composable
-fun ProfileHeader() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .background(
-                ProfileBlue,
-                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-            )
-            .padding(16.dp),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Text(
-            text = "Lainnya",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 24.dp)
-        )
-    }
-}
-
-@Composable
-fun ProfileCard(currentUser: FirebaseUser?) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Profile Image
-            Image(
-                painter = painterResource(R.drawable.chris_james),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Name
-            Text(
-                text = currentUser?.displayName ?: "Christ James",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ProfileTextDark
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Email
-            Text(
-                text = currentUser?.email ?: "christjames@gmail.com",
-                fontSize = 14.sp,
-                color = ProfileTextLight
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ActionButtonsRow()
-        }
-    }
-}
-
-@Composable
-fun ActionButtonsRow() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ActionButton(icon = Icons.Outlined.Assignment, label = "Aktivitas")
-        ActionButton(icon = Icons.Outlined.Assessment, label = "Laporan")
-        ActionButton(icon = Icons.Outlined.Message, label = "Pesan")
-        ActionButton(icon = Icons.Outlined.Star, label = "Penilaian")
-    }
-}
-
-@Composable
-fun ActionButton(icon: ImageVector, label: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { /* TODO: Handle action */ }
-    ) {
-        Surface(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            color = Color(0xFFF8F9FF),
-            border = BorderStroke(1.dp, Color(0xFFE3E7FF))
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = ProfileIconBlue,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .fillMaxSize()
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = ProfileTextDark,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-fun SettingsMenu(
-    onProfileSettingsClick: () -> Unit = {},
-    onLanguageClick: () -> Unit = {},
-    onHelpClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            SettingsMenuItem(
-                icon = Icons.Outlined.Settings,
-                text = "Pengaturan Profil",
-                onClick = onProfileSettingsClick
-            )
-            Divider(color = ProfileLightGrayBg, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-            SettingsMenuItem(
-                icon = Icons.Outlined.Language,
-                text = "Bahasa",
-                onClick = onLanguageClick
-            )
-            Divider(color = ProfileLightGrayBg, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-            SettingsMenuItem(
-                icon = Icons.Outlined.HelpOutline,
-                text = "Bantuan",
-                onClick = onHelpClick
-            )
-            Divider(color = ProfileLightGrayBg, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-            SettingsMenuItem(
-                icon = Icons.AutoMirrored.Outlined.Logout,
-                text = "Keluar",
-                isLogout = true,
-                onClick = onLogoutClick
-            )
-        }
-    }
-}
-
-@Composable
-fun SettingsMenuItem(icon: ImageVector, text: String, isLogout: Boolean = false, onClick: () -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = text,
-            tint = if (isLogout) Color.Red.copy(alpha = 0.8f) else ProfileIconBlue,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            color = if (isLogout) Color.Red.copy(alpha = 0.8f) else ProfileTextDark,
-            modifier = Modifier.weight(1f)
-        )
-        if (!isLogout) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Go to $text",
-                tint = Color.Gray,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-// Profile Settings Screen
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProfileSettingsScreen(navController: NavController, auth: FirebaseAuth) {
-    val currentUser = auth.currentUser
-    var userProfile by remember { mutableStateOf(UserProfile()) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showGenderDialog by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-
-    // Initialize with current user data
-    LaunchedEffect(currentUser) {
-        currentUser?.let { user ->
-            userProfile = userProfile.copy(
-                name = user.displayName ?: "",
-                email = user.email ?: "",
-                phone = user.phoneNumber ?: ""
-            )
-        }
+        })
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ProfileLightGrayBg)
-    ) {
-        // Header with back button
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .background(
-                    ProfileBlue,
-                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-                )
-                .padding(16.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
-                Text(
-                    text = "Pengaturan Profil",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            uploadImageToSupabaseAndSaveUrl(userId!!, it, context) { imageUrl ->
+                userProfile = userProfile?.copy(profileImageUrl = imageUrl)
             }
         }
+    }
 
+
+
+    Scaffold(){ paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Profile Image Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            Box(
+                contentAlignment = Alignment.BottomEnd,
+                modifier = Modifier.padding(top = 16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box {
-                        Image(
-                            painter = painterResource(R.drawable.chris_james),
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                        Surface(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .align(Alignment.BottomEnd)
-                                .clickable { /* TODO: Change profile picture */ },
-                            shape = CircleShape,
-                            color = ProfileBlue
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Profile Picture",
-                                tint = Color.White,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                        }
-                    }
+                if (userProfile?.profileImageUrl.isNullOrEmpty()) {
+                    Image(
+                        imageVector = Icons.Filled.AccountCircle,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                    )
+                } else {
+                    AsyncImage(
+                        model = userProfile?.profileImageUrl,
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Profile Information Form
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                ) {
-                    // Name Field
-                    OutlinedTextField(
-                        value = userProfile.name,
-                        onValueChange = { userProfile = userProfile.copy(name = it) },
-                        label = { Text("Christ James") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Name"
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Birth Date Field
-                    OutlinedTextField(
-                        value = userProfile.birthDate.ifEmpty { "01/01/1998" },
-                        onValueChange = { },
-                        label = { Text("Tanggal Lahir") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.CalendarToday,
-                                contentDescription = "Birth Date"
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { showDatePicker = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = "Select Date"
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        readOnly = true
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Email Field
-                    OutlinedTextField(
-                        value = userProfile.email,
-                        onValueChange = { userProfile = userProfile.copy(email = it) },
-                        label = { Text("christjames@gmail.com") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = "Email"
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Phone Number Field
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Top
+                if (isEditMode) {
+                    SmallFloatingActionButton(
+                        onClick = { launcher.launch("image/*") },
+                        shape = CircleShape,
+                        modifier = Modifier.size(36.dp),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ) {
-                        OutlinedTextField(
-                            value = "+62",
-                            onValueChange = { },
-                            modifier = Modifier.width(80.dp),
-                            readOnly = true,
-                            singleLine = true
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        OutlinedTextField(
-                            value = userProfile.phone.removePrefix("+62"),
-                            onValueChange = { userProfile = userProfile.copy(phone = "+62$it") },
-                            label = { Text("812-8888-1111") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-                        )
+                        Icon(Icons.Outlined.Edit, contentDescription = "Edit Picture")
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Gender Field
-                    OutlinedTextField(
-                        value = userProfile.gender.ifEmpty { "Laki-laki" },
-                        onValueChange = { },
-                        label = { Text("Jenis Kelamin") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Gender"
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { showGenderDialog = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "Select Gender"
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        readOnly = true
-                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Save Button
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        // TODO: Save profile data to Firebase
-                        navController.popBackStack()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
-                shape = RoundedCornerShape(16.dp)
-            ) {
                 Text(
-                    text = "Edit Profil",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = if (isEditMode) editableName else userProfile?.name ?: "Nama Pengguna",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-            }
-        }
-    }
+                Spacer(modifier = Modifier.height(4.dp))
 
-    // Gender Selection Dialog
-    if (showGenderDialog) {
-        AlertDialog(
-            onDismissRequest = { showGenderDialog = false },
-            title = { Text("Pilih Jenis Kelamin") },
-            text = {
-                Column {
-                    listOf("Laki-laki", "Perempuan").forEach { gender ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    userProfile = userProfile.copy(gender = gender)
-                                    showGenderDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = userProfile.gender == gender,
-                                onClick = {
-                                    userProfile = userProfile.copy(gender = gender)
-                                    showGenderDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = gender)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showGenderDialog = false }) {
-                    Text("Batal")
-                }
-            }
-        )
-    }
-}
-
-// Language Settings Screen
-@Composable
-fun LanguageSettingsScreen(navController: NavController) {
-    var selectedLanguage by remember { mutableStateOf("Bahasa Indonesia") }
-    val languages = listOf(
-        "Bahasa Indonesia" to "Bahasa Indonesia",
-        "English" to "Pilih bahasa alternatif 1",
-        "Other" to "Pilih bahasa alternatif 2"
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ProfileLightGrayBg)
-    ) {
-        // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .background(
-                    ProfileBlue,
-                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-                )
-                .padding(16.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = userProfile?.email ?: "email@example.com",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = "Verified",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
-                Text(
-                    text = "Bahasa",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column {
-                Text(
-                    text = "Pengaturan Bahasa",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(20.dp)
-                )
+                Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "Bahasa Utama",
-                    fontSize = 14.sp,
-                    color = ProfileTextLight,
-                    modifier = Modifier.padding(horizontal = 20.dp)
+                ProfileInfoItem(
+                    icon = Icons.Filled.Person,
+                    label = "Nama Lengkap",
+                    value = editableName,
+                    onValueChange = { editableName = it },
+                    isEditable = isEditMode
+                )
+                ProfileInfoItem(
+                    icon = Icons.Filled.CalendarToday,
+                    label = "Tanggal Lahir (DD/MM/YYYY)",
+                    value = editableDob,
+                    onValueChange = { editableDob = it },
+                    isEditable = isEditMode,
+                    keyboardType = KeyboardType.Number
+                )
+                ProfileInfoItem(
+                    icon = Icons.Filled.Email,
+                    label = "Email",
+                    value = userProfile?.email ?: "",
+                    onValueChange = { /* Email not editable */ },
+                    isEditable = false
                 )
 
-                languages.forEachIndexed { index, (key, value) ->
-                    LanguageOption(
-                        primaryText = key,
-                        secondaryText = value,
-                        isSelected = selectedLanguage == key,
-                        onClick = { selectedLanguage = key }
-                    )
-                    if (index < languages.size - 1) {
-                        Divider(
-                            color = ProfileLightGrayBg,
-                            thickness = 0.5.dp,
-                            modifier = Modifier.padding(horizontal = 20.dp)
-                        )
-                    }
-                }
+                ProfileInfoItem(
+                    icon = Icons.Filled.Phone,
+                    label = "Nomor Telepon (e.g. +628123...)",
+                    value = editableFullPhoneNumber,
+                    onValueChange = { editableFullPhoneNumber = it },
+                    isEditable = isEditMode,
+                    keyboardType = KeyboardType.Phone
+                )
+                ProfileInfoItem(
+                    icon = Icons.Filled.Wc,
+                    label = "Jenis Kelamin",
+                    value = editableGender,
+                    onValueChange = { editableGender = it },
+                    isEditable = isEditMode,
+                    trailingIcon = if (!isEditMode) Icons.Filled.ChevronRight else null,
+                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+//                Spacer(modifier = Modifier.weight(1f))
 
                 Button(
-                    onClick = { navController.popBackStack() },
+                    onClick = {
+                        if (isEditMode) {
+
+                                isLoading = true
+                                val updatedProfile = userProfile?.copy(
+                                    name = editableName,
+                                    birthdate = editableDob,
+                                    phoneNumber = editableFullPhoneNumber,
+                                    gender = editableGender
+                                )
+                                if (updatedProfile != null && userId != null) {
+                                    saveUserProfile(
+                                        userId = userId!!,
+                                        user = updatedProfile,
+                                        onSuccess = {
+                                            userProfile = updatedProfile
+                                            isEditMode = false
+                                            isLoading = false
+                                        },
+                                        onError = {
+                                            isLoading = false
+                                        }
+                                    )
+                                }
+
+                        } else {
+                            userProfile?.let {
+                                editableName = it.name
+                                editableDob = it.birthdate
+                                editableFullPhoneNumber = it.phoneNumber
+                                editableGender = it.gender
+                            }
+                            isEditMode = true
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(bottom = 20.dp)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ProfileBlue),
-                    shape = RoundedCornerShape(12.dp)
+                        .padding(vertical = 16.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    enabled = !isLoading || isEditMode
                 ) {
-                    Text("Konfirmasi")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun LanguageOption(
-    primaryText: String,
-    secondaryText: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = primaryText,
-                fontSize = 16.sp,
-                color = ProfileTextDark
-            )
-            if (secondaryText != primaryText) {
-                Text(
-                    text = secondaryText,
-                    fontSize = 14.sp,
-                    color = ProfileTextLight
-                )
-            }
-        }
-
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "Select",
-            tint = if (isSelected) ProfileBlue else Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-// Help Screen
-@Composable
-fun HelpScreen(navController: NavController) {
-    val helpItems = listOf(
-        "Laporkan Masalah" to Icons.Outlined.ReportProblem,
-        "Status Akun" to Icons.Outlined.AccountCircle,
-        "Help Center" to Icons.Outlined.Help,
-        "Privasi dan Keamanan" to Icons.Outlined.Security,
-        "Dukungan" to Icons.Outlined.Support
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ProfileLightGrayBg)
-    ) {
-        // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .background(
-                    ProfileBlue,
-                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-                )
-                .padding(16.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
-                Text(
-                    text = "Bantuan",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                helpItems.forEachIndexed { index, (title, icon) ->
-                    HelpMenuItem(
-                        icon = icon,
-                        text = title,
-                        onClick = { /* TODO: Handle help item click */ }
-                    )
-                    if (index < helpItems.size - 1) {
-                        Divider(
-                            color = ProfileLightGrayBg,
-                            thickness = 0.5.dp,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                    if (isLoading && isEditMode) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            if (isEditMode) "Simpan Perubahan" else "Edit Profil",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                }
+
             }
         }
     }
 }
 
+@Preview
 @Composable
-fun HelpMenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = text,
-            tint = ProfileIconBlue,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            color = ProfileTextDark,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "Go to $text",
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileNavigationPreview() {
-    MaterialTheme {
-        ProfileNavigationHost()
-    }
+fun LainnyaScreenPreview() {
+    LainnyaScreen()
 }

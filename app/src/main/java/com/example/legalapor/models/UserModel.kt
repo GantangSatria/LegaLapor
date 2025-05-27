@@ -6,5 +6,6 @@ data class UserModel(
     val birthdate: String = "",
     val email: String = "",
     val phoneNumber: String = "",
-    val gender: String = ""
+    val gender: String = "",
+    val profileImageUrl: String = ""
 )

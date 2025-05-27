@@ -119,7 +119,7 @@ fun ReportCasePage(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors( // Use centerAlignedTopAppBarColors
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors( 
                     containerColor = Color.White,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                     navigationIconContentColor = Color(0xFF31469F)
@@ -256,11 +256,11 @@ fun FormTextField(
     )
 }
 
-class FakeReportCaseViewModel : ReportCaseViewModel() {
-    init {
-        updateLawyerNameToReportTo("Reza Simanjuntak, S.H, M.H.")
-    }
-}
+//class FakeReportCaseViewModel : ReportCaseViewModel() {
+//    init {
+//        updateLawyerNameToReportTo("Reza Simanjuntak, S.H, M.H.")
+//    }
+//}
 
 //@Preview(showBackground = true)
 //@Composable
