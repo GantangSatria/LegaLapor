@@ -5,6 +5,7 @@ plugins {
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    kotlin("plugin.serialization") version "2.0.0"
 }
 
 android {
@@ -120,4 +121,11 @@ dependencies {
     
     implementation("androidx.navigation:navigation-compose:2.9.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // supabase
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.4"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt:3.1.4")
+    implementation("io.ktor:ktor-client-core:3.1.3")
+    implementation("io.ktor:ktor-client-cio:3.1.3")
 }

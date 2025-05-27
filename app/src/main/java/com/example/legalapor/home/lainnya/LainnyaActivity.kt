@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,11 +53,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.example.legalapor.home.lainnya.components.ProfileInfoItem
 import com.example.legalapor.models.UserModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.storage.upload
+import io.ktor.http.ContentType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -64,6 +74,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import java.io.File
 import java.io.IOException
 
 
@@ -71,6 +82,21 @@ import java.io.IOException
 fun LainnyaScreen() {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
+
+    val coroutineScope = rememberCoroutineScope()
+
+    //supabase client
+    val supabase = createSupabaseClient(
+        supabaseUrl = "https://qqwnyvosdtoosydrtdmx.supabase.co",
+        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd255dm9zZHRvb3N5ZHJ0ZG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNTkxOTAsImV4cCI6MjA2MzczNTE5MH0.ZqKrqbOJqPur4ebpFt9t9JjQ1vd7GlvHt8vAr3e63bg"
+    ) {
+        install(Storage) {
+            // settings
+        }
+
+    }
+
+
 
     fun loadUserProfile(
         userId: String,
@@ -139,55 +165,72 @@ fun LainnyaScreen() {
         }
     }
 
+    // val bucket = supabase.storage.from("user-image")
+
+    suspend fun uploadImage(
+        supabase: SupabaseClient,
+        fileName: String,
+        fileBytes: ByteArray
+    ): String? {
+        val bucket = supabase.storage["user-image"]
+
+        val tempFile = File.createTempFile(fileName, ".png", context.cacheDir)
+        tempFile.writeBytes(fileBytes)
+
+        val result = bucket.upload(
+            path = "$fileName.png",
+            file = tempFile,
+        )
+
+        return if (result != null) {
+            // Dapatkan URL publik
+            bucket.publicUrl("$fileName.png")
+        } else {
+            null // Gagal upload
+        }
+    }
+
+//    fun uploadFile(fileName: String, fileBytes: ByteArray) {
+//        bucket.upload("$fileName.png", fileBytes.toRequestBody())
+//    }
+
     fun uploadImageToSupabaseAndSaveUrl(
         userId: String,
         imageUri: Uri,
         context: Context,
+        supabase: SupabaseClient,
+        scope: CoroutineScope,
         onComplete: (String) -> Unit
     ) {
         val byteArray = uriToByteArray(imageUri, context) ?: return
-        val bucket = "user-image"
-        val fileName = "${userId}_${System.currentTimeMillis()}.png"
+        val fileName = "${userId}_${System.currentTimeMillis()}"
 
-        val client = OkHttpClient()
-        val mediaType = "image/png".toMediaType()
-        val requestBody = byteArray.toRequestBody(mediaType)
-
-        val request = Request.Builder()
-            .url("https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/$bucket/$fileName")
-            .put(requestBody)
-            .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxd255dm9zZHRvb3N5ZHJ0ZG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNTkxOTAsImV4cCI6MjA2MzczNTE5MH0.ZqKrqbOJqPur4ebpFt9t9JjQ1vd7GlvHt8vAr3e63bg")
-            .addHeader("Content-Type", "image/png")
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
+        scope.launch {
+            val imageUrl = uploadImage(supabase, fileName, byteArray)
+            imageUrl?.let {
+                FirebaseFirestore.getInstance().collection("users").document(userId)
+                    .update("profileImageUrl", it)
+                    .addOnSuccessListener { onComplete(imageUrl) }
             }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    val publicUrl = "https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/public/$fileName"
-
-                    FirebaseFirestore.getInstance().collection("users").document(userId)
-                        .update("profileImageUrl", publicUrl)
-                        .addOnSuccessListener { onComplete(publicUrl) }
-                } else {
-                    println("Upload failed: ${response.message}")
-                }
-            }
-        })
+        }
     }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            uploadImageToSupabaseAndSaveUrl(userId!!, it, context) { imageUrl ->
+            uploadImageToSupabaseAndSaveUrl(
+                userId = userId!!,
+                imageUri = it,
+                context = context,
+                supabase = supabase,
+                scope = coroutineScope
+            ) { imageUrl ->
                 userProfile = userProfile?.copy(profileImageUrl = imageUrl)
             }
         }
     }
+
 
 
 
