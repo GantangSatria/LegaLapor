@@ -104,7 +104,7 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
 
     Scaffold (
         topBar = {
-            CustomTopAppBar(userName = userViewModel.name.value)
+            CustomTopAppBar(userName = userViewModel.user.value?.name ?: "")
         },
         bottomBar = {
             BottomAppBar(
@@ -136,7 +136,19 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
         Box(modifier = Modifier.padding(padding)) {
             when (currentRoute) {
                 NavRoutes.Beranda.route -> BerandaScreen()
-                NavRoutes.Forum.route -> ForumScreen()
+                NavRoutes.Forum.route -> {
+                    val user = userViewModel.user.value
+                    if (user != null) {
+                        ForumScreen(user = user)
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Memuat data pengguna...")
+                        }
+                    }
+                }
                 NavRoutes.Riwayat.route -> RiwayatScreen(navController)
                 NavRoutes.Lainnya.route -> LainnyaScreen()
             }
