@@ -53,5 +53,13 @@ class RiwayatChatViewModel : ViewModel() {
         )
 
         messagesRef.document(newMessage.messageId).set(newMessage)
+            .addOnSuccessListener {
+                messagesRef.parent?.update(
+                    mapOf(
+                        "lastMessageText" to newMessage.message,
+                        "lastMessageTimestamp" to newMessage.timestamp
+                    )
+                )
+            }
     }
 }

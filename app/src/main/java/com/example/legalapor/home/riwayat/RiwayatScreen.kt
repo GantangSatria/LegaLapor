@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -35,9 +37,19 @@ fun RiwayatScreen(navController: NavHostController) {
     }
     val viewModel: ChatListViewModel = viewModel(navBackStackEntry)
 
-//    LaunchedEffect(Unit) {
-//        viewModel.fetchChatPreviews()
-//    }
+    val lifecycle = navBackStackEntry.lifecycle
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.fetchChatPreviews()
+            }
+        }
+        lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
 
     val chatPreviews by viewModel.chatPreviews.collectAsState()
 

@@ -167,7 +167,6 @@ open class ReportCaseViewModel : ViewModel() {
         val messagesRef = firestore.collection("chats").document(chatId).collection("messages")
         messagesRef.document(message.messageId).set(message)
 
-        // Update last message di dokumen chats utama
         firestore.collection("chats").document(chatId)
             .update(
                 mapOf(

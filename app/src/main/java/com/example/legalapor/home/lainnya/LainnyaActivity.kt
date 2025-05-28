@@ -1,3 +1,4 @@
+import android.app.DatePickerDialog
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,8 +33,14 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,6 +86,7 @@ import java.io.File
 import java.io.IOException
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LainnyaScreen() {
     val auth = FirebaseAuth.getInstance()
@@ -315,15 +323,36 @@ fun LainnyaScreen() {
                     onValueChange = { editableName = it },
                     isEditable = isEditMode
                 )
+            if (isEditMode) {
+                val datePickerDialog = remember {
+                    DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            editableDob = "%02d/%02d/%04d".format(dayOfMonth, month + 1, year)
+                        },
+                        2000, 0, 1
+                    )
+                }
+
                 ProfileInfoItem(
                     icon = Icons.Filled.CalendarToday,
-                    label = "Tanggal Lahir (DD/MM/YYYY)",
+                    label = "Tanggal Lahir",
                     value = editableDob,
-                    onValueChange = { editableDob = it },
-                    isEditable = isEditMode,
-                    keyboardType = KeyboardType.Number
+                    onValueChange = {},
+                    isEditable = false,
+                    onClick = { datePickerDialog.show() }
                 )
+            } else {
                 ProfileInfoItem(
+                    icon = Icons.Filled.CalendarToday,
+                    label = "Tanggal Lahir",
+                    value = editableDob,
+                    onValueChange = {},
+                    isEditable = false
+                )
+            }
+
+            ProfileInfoItem(
                     icon = Icons.Filled.Email,
                     label = "Email",
                     value = userProfile?.email ?: "",
@@ -333,20 +362,63 @@ fun LainnyaScreen() {
 
                 ProfileInfoItem(
                     icon = Icons.Filled.Phone,
-                    label = "Nomor Telepon (e.g. +628123...)",
+                    label = "Nomor Telepon",
                     value = editableFullPhoneNumber,
                     onValueChange = { editableFullPhoneNumber = it },
                     isEditable = isEditMode,
                     keyboardType = KeyboardType.Phone
                 )
+            if (isEditMode) {
+                var expanded by remember { mutableStateOf(false) }
+                val genderOptions = listOf("Laki-laki", "Perempuan")
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = editableGender,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Jenis Kelamin") },
+                        leadingIcon = { Icon(Icons.Filled.Wc, contentDescription = "Jenis Kelamin") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                            .padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(),
+                        enabled = true
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        genderOptions.forEach { selection ->
+                            DropdownMenuItem(
+                                text = { Text(selection) },
+                                onClick = {
+                                    editableGender = selection
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            } else {
                 ProfileInfoItem(
                     icon = Icons.Filled.Wc,
                     label = "Jenis Kelamin",
                     value = editableGender,
-                    onValueChange = { editableGender = it },
-                    isEditable = isEditMode,
-                    trailingIcon = if (!isEditMode) Icons.Filled.ChevronRight else null,
+                    onValueChange = {},
+                    isEditable = false
                 )
+            }
+
 
 //                Spacer(modifier = Modifier.weight(1f))
 

@@ -45,13 +45,17 @@ fun RiwayatItem(
                 .clip(RoundedCornerShape(10.dp))
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(text = lawyerName, style = MaterialTheme.typography.titleMedium)
             Text(text = lawyerTitle, style = MaterialTheme.typography.bodySmall)
             Text(text = lastMessage, style = MaterialTheme.typography.bodySmall, maxLines = 1)
         }
-        Spacer(modifier = Modifier.weight(1f))
-        Text(text = date, style = MaterialTheme.typography.labelSmall)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = date,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1
+        )
     }
 }
 

@@ -3,6 +3,7 @@ package com.example.legalapor.navigation
 import android.net.Uri
 
 sealed class NavRoutes(val route: String) {
+    object Onboarding : NavRoutes("onboarding")
     object Main : NavRoutes("main")
     object Beranda : NavRoutes("beranda")
     object Forum : NavRoutes("forum")

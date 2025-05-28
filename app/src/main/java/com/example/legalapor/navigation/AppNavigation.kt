@@ -16,16 +16,40 @@ import com.example.legalapor.home.ui.MainScreen
 import com.example.legalapor.laporan.LawyerSelectPage
 import com.example.legalapor.laporan.ReportCasePage
 import com.example.legalapor.models.LawyerModel
+import com.example.legalapor.splashscreen.AppEntryPoint
+import com.example.legalapor.splashscreen.WelcomeScreen
+import com.google.accompanist.pager.ExperimentalPagerApi
 import java.net.URLDecoder
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun AppNavigation(navController: NavHostController) {
 //    val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.Auth.route
+        startDestination = NavRoutes.Onboarding.route
     ) {
+        composable(NavRoutes.Onboarding.route) {
+            WelcomeScreen(
+                onCreateAccount = {
+                    navController.navigate(NavRoutes.Auth.route) {
+                        popUpTo(NavRoutes.Onboarding.route) { inclusive = true }
+                    }
+                },
+                onLogin = {
+                    navController.navigate(NavRoutes.Auth.route) {
+                        popUpTo(NavRoutes.Onboarding.route) { inclusive = true }
+                    }
+                },
+                onSkip = {
+                    navController.navigate(NavRoutes.Auth.route) {
+                        popUpTo(NavRoutes.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(NavRoutes.Beranda.route) { MainScreen(navController) }
         composable(NavRoutes.Forum.route) { MainScreen(navController) }
         composable(NavRoutes.Riwayat.route) { MainScreen(navController) }

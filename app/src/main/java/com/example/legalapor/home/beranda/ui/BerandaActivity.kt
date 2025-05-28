@@ -53,7 +53,16 @@ class BerandaActivity : ComponentActivity() {
     }
 }
 
-val chipItems = listOf("Pidana", "Perdata", "Perpajakan", "Kepailitan", "Perkawinan dan Perceraian", "Pertanahan", "Tenaga Kerja", "Hak Cipta");
+val chipItems = listOf("Semua") + listOf(
+    "Pidana",
+    "Perdata",
+    "Pajak",
+    "Kepailitan",
+    "Perkawinan dan Perceraian",
+    "Pertanahan",
+    "Tenaga Kerja",
+    "Hak Cipta"
+)
 // nuat preview
 var lawyerItems = listOf(LawyerModel(1, "Farida Choirunnisa, S.H.", "", "Pengalaman 3 Tahun", "220 Kasus", "PBH Peradi", 4.5f, 38, "https://qqwnyvosdtoosydrtdmx.supabase.co/storage/v1/object/public/lawyer-image//StockCake-Lawyer%20holding%20book_1725547095%201.png"),
     LawyerModel(2, "Zayn Maliki Al-Hasc, S.H., M.H.", "", "Pengalaman 6 Tahun", "110 Kasus", "YLBHI", 4.8f, 52, ""),
@@ -62,7 +71,14 @@ var lawyerItems = listOf(LawyerModel(1, "Farida Choirunnisa, S.H.", "", "Pengala
 @Composable
 fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
     val lawyers by viewModel.lawyers.collectAsState()
-    var activeChipLabel by remember { mutableStateOf("Pidana") }
+    // var activeChipLabel by remember { mutableStateOf("Pidana") }
+    var activeChipLabel by remember { mutableStateOf("Semua") }
+
+    val displayedLawyers = remember(lawyers, activeChipLabel) {
+        if (activeChipLabel == "Semua") lawyers
+        else lawyers.filter { it.qualifications == activeChipLabel }
+    }
+
     Scaffold {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(it)) {
             Image(painter = painterResource(id = R.drawable.home_hero_image), contentDescription = null, Modifier.height(151.dp).width(419.dp))
@@ -86,14 +102,14 @@ fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
                             Text(chipText)},
                         enabled = chipEnabled,
                         colors = FilterChipDefaults.elevatedFilterChipColors(
-                            containerColor = Color.White, // Background for unselected
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant, // Text color for unselected
-                            selectedContainerColor = Color(0xFF4285F4), // Blue background for selected (Google Blue example)
+                            containerColor = Color.White,
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            selectedContainerColor = Color(0xFF4285F4),
                             selectedLabelColor = Color.White,
                         ),
-                        border = FilterChipDefaults.filterChipBorder( // Explicitly define border
+                        border = FilterChipDefaults.filterChipBorder(
                             borderColor = Color.Black,
-                            selectedBorderColor = Color.Transparent, // Or Color(0xFF4285F4) if you want a blue border
+                            selectedBorderColor = Color.Transparent,
                             borderWidth = 1.dp,
                             selectedBorderWidth = 1.dp,
                             enabled = chipEnabled,
@@ -109,10 +125,8 @@ fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(lawyers) { lawyer ->
-                    LawyerProfileCard(
-                        lawyer = lawyer
-                    )
+                items(displayedLawyers) { lawyer ->
+                    LawyerProfileCard(lawyer = lawyer)
                 }
             }
 
@@ -125,8 +139,8 @@ fun BerandaScreen(viewModel: BerandaViewModel = viewModel()) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    BerandaScreen(viewModel = BerandaViewModel())
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun GreetingPreview() {
+//    BerandaScreen(viewModel = BerandaViewModel())
+//}
