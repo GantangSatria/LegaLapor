@@ -46,7 +46,7 @@ import kotlinx.coroutines.flow.StateFlow
 fun LawyerSelectPage( navController: NavController, viewModel: LawyerSelectViewModel = viewModel(), userViewModel: UserViewModel = viewModel()) {
     val lawyers by viewModel.lawyers.collectAsState()
     Scaffold(
-        topBar = {CustomTopAppBar(userName = userViewModel.name.value)},
+        topBar = {CustomTopAppBar(userName = userViewModel.user.value?.name ?: "")},
         content = { innerPadding ->
            Box(
                modifier = Modifier

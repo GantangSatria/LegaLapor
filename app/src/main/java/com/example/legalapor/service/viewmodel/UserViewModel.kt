@@ -3,13 +3,14 @@ package com.example.legalapor.service.viewmodel
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.legalapor.models.UserModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 
 class UserViewModel : ViewModel() {
-    private val _name = mutableStateOf("")
-    val name: State<String> = _name
+    private val _user = mutableStateOf<UserModel?>(null)
+    val user: State<UserModel?> = _user
 
     init {
         fetchUserData()
@@ -21,7 +22,8 @@ class UserViewModel : ViewModel() {
             Firebase.firestore.collection("users").document(uid).get()
                 .addOnSuccessListener { document ->
                     if (document != null && document.exists()) {
-                        _name.value = document.getString("name") ?: ""
+                        val userData = document.toObject(UserModel::class.java)
+                        _user.value = userData
                     }
                 }
         }
