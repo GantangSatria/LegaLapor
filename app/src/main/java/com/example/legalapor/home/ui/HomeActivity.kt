@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -48,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,8 +91,8 @@ fun MainScreen(navController: NavHostController, userViewModel: UserViewModel = 
 
     val actualSelectableNavItems = listOf(
         NavItem("Beranda", Icons.Filled.Home, NavRoutes.Beranda.route),
-        NavItem("Forum", Icons.AutoMirrored.Outlined.Send, NavRoutes.Forum.route),
-        NavItem("Riwayat", Icons.Filled.Person, NavRoutes.Riwayat.route),
+        NavItem("Forum", ImageVector.vectorResource(R.drawable.forum_chat), NavRoutes.Forum.route),
+        NavItem("Riwayat", ImageVector.vectorResource(R.drawable.riwayat_logo), NavRoutes.Riwayat.route),
         NavItem("Lainnya", Icons.Filled.Settings, NavRoutes.Lainnya.route)
     )
 
@@ -198,9 +200,31 @@ fun BottomNavBar(modifier: Modifier = Modifier,
 
 @Preview(showBackground = true)
 @Composable
-fun SimpleComposablePreview() {
-    MainScreen(rememberNavController())
+fun BottomNavBarPreview() {
+    LegaLaporTheme {
+        val actualSelectableNavItems = listOf(
+            NavItem("Beranda", Icons.Filled.Home, "beranda"),
+            NavItem("Forum", Icons.Filled.Forum, "forum"),
+            NavItem("Riwayat", Icons.Filled.Person, "riwayat"),
+            NavItem("Lainnya", Icons.Filled.Settings, "lainnya")
+        )
+
+        val navigationItems: List<NavBarElement> = listOf(
+            NavItemData(actualSelectableNavItems[0], 0),
+            NavItemData(actualSelectableNavItems[1], 1),
+            SpacerData,
+            NavItemData(actualSelectableNavItems[2], 2),
+            NavItemData(actualSelectableNavItems[3], 3)
+        )
+
+        BottomNavBar(
+            items = navigationItems,
+            currentRoute = "beranda",
+            onItemSelected = { }
+        )
+    }
 }
+
 
 // local class untuk ui
 data class NavItem(val title: String, val icon: ImageVector, val route: String)
