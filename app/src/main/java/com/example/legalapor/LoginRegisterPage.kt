@@ -397,9 +397,8 @@ fun PasswordInput(
             label = { Text(label) },
             leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon", tint = Color.Gray) },
             trailingIcon = {
-                // Perbaikan: Gunakan icon mata yang benar
-                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (passwordVisible) "Sembunyikan password" else "Tampilkan password"
+                val image = if (passwordVisible) Icons.Filled.RemoveRedEye else Icons.Filled.Close
+                val description = if (passwordVisible) "Hide password" else "Show password"
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = image, contentDescription = description, tint = Color.Gray)
                 }
